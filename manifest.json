@@ -3,7 +3,7 @@
  "short_name":"PWA",
  "description": "PWA Template",
  "scope":"/",
- "start_url":"/?login=JBL&uid=yxhamdh2jsubj829jxi7x937",
+ "start_url":"/smart-home/?login=JBL&uid=yxhamdh2jsubj829jxi7x937",
  "display" : "fullscreen",
  "orientation": "portrait",
  "theme_color":"#ffffff",
