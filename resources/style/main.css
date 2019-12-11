@@ -22,6 +22,10 @@ Keep this message long to maintain readability among different parts of the code
 Creator: John Brell G. Ladiero
 Copyright 2019-2020
  */
+
+
+
+
 :root{
   color-scheme: light dark;
   --background-translucent:rgba(255,255,255,0.5);
@@ -50,22 +54,18 @@ Copyright 2019-2020
             body { background-color:#000000; color:#e7e7e7; }
       }
 
+      *{ margin:0; padding: 0; }
+      html { height: 100vh; width: 100vw; overflow: hidden;}
 
-
-*{ margin:0 0 0 0; padding: 0 0 0 0; }
-
-
-
-
-html { overflow: hidden; }
-body{
-  top:0; left: 0; right: 0; bottom: 0; width: 100vw;
-  font-family: helvetica; overflow: scroll;
-  overflow: -moz-scrollbars-none; -ms-overflow-style: none;
-  -webkit-user-select: none;
-  -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
-} body::-webkit-scrollbar { width: 0 !important }
+      body{
+        top:0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh;
+        font-family: helvetica; overflow: scroll;
+        overflow: -moz-scrollbars-none; -ms-overflow-style: none;
+        -webkit-user-select: none;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        scroll-snap-type: y mandatory;
+      } body::-webkit-scrollbar { width: 0 !important }
 
 
 
@@ -122,47 +122,45 @@ Keep this message long to maintain readability among different parts of the code
 Creator: John Brell G. Ladiero
 Copyright 2019-2020
 */
-main {
-  top:0; left: 0; right: 0; width:100vw; min-height:100vh;
-  margin:0; padding:0; position: relative;
-  }
-      main > header {
-        top:0; left: 0; right: 0; height: auto; display: none;
-        margin: 0; padding-top: 5vh; padding-left: 5vw; padding-right: 5vw; padding-bottom:1vh; position: sticky;
-        background: var(--background-blend-in); color:inherit;
-        font-size: 170%; font-weight: bold;
-        z-index: 500;
-        -webkit-backdrop-filter: blur(50px);
-        backdrop-filter: blur(10px);
-      } main > header[active]{ display: block; }
-      main > section {
-        width:90vw; height: auto;
-        margin: auto; margin-bottom: 15vh; padding:0; position: relative; display: none;
+
+main > header {
+  top:0; left: 0; right: 0; height: auto; display: none;
+  margin: 0; padding-top: 5vh; padding-bottom:1vh; padding-left: 5vw; padding-right: 5vw;  position: sticky;
+  background: var(--background-blend-in); color: inherit;
+  font-size: 170%; font-weight: bold; vertical-align: bottom;
+  z-index: 500;
+  -webkit-backdrop-filter: blur(50px);
+  backdrop-filter: blur(10px);
+} main > header[active]{ display: block; }
+main > section {
+  width:90vw; height: auto;
+  margin: auto; margin-bottom: 15vh; padding:0; position: relative; display: none;
+  background: none; color:inherit;
+  font-size: 100%;
+} main > section[active]{display: block;}
+      section > header {
+        height: auto;
+        margin:1em auto; padding:0; position: relative; display: block;
         background: none; color:inherit;
-        font-size: 100%;
-      } main > section[active]{display: block;}
-            section > header {
-              height: auto;
-              margin:1em auto; padding:0; position: relative; display: block;
-              background: none; color:inherit;
-              font-size: 150%; font-weight: bold;
+        font-size: 150%; font-weight: bold;
+      }
+      article {
+        min-width: 10em;
+        margin:1em auto; padding: 1em; position: relative;
+        background: var(--token); display: block;
+        border-radius: 1em; border: 1px solid var(--line-color);
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1), 0 6px 15px 0 rgba(0, 0, 0, 0.05);
+        scroll-snap-align: center;
+      }
+            article > header {
+              top:0; left:0; right:0; position: relative;
+              margin-top: 0; margin-bottom: 0.5em; display: block;
+              font-size: 140%; font-weight: 700;
             }
-            article {
-              min-width: 10em;
-              margin:1em auto; padding: 1em; position: relative;
-              background: var(--token); display: block;
-              border-radius: 1em; border: 1px solid var(--line-color);
-              box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1), 0 6px 15px 0 rgba(0, 0, 0, 0.05);
-            }
-                  article > header {
-                    top:0; left:0; right:0; position: relative;
-                    margin-top: 0; margin-bottom: 0.5em; display: block;
-                    font-size: 140%; font-weight: 700;
-                  }
-            section > footer {
-              margin:1em auto; min-width: 10em;
-              text-align: center;
-            }
+      section > footer {
+        margin:1em auto; min-width: 10em;
+        text-align: center;
+      }
 
 
 /*
@@ -234,6 +232,7 @@ div[graph]{
       }
 
 
+
 /*
 GUI Modals / Necessities
 Childrens are indented with three \t relative to it's parent
@@ -243,7 +242,7 @@ Creator: John Brell G. Ladiero
 Copyright 2019-2020
 */
 div[modal]{
-  top:0; bottom: 0; left: 0; right: 0;
+  top:0; left: 0; right: 0; height: 100vh; width: 100vw;
   position: fixed; display: none; opacity: 0;
   background: rgba(0,0,0,0.5);
   -webkit-backdrop-filter: blur(50px);
@@ -251,29 +250,48 @@ div[modal]{
   z-index: 999;
   } div[modal][active] { display: block;}
 
-      div[alert]{}
-            div[alert] center{
-              z-index: 1000;
-              width: 70vw;
-              margin: 100vh auto;
-            }
+      div[alert] center{
+        z-index: 1000;
+        width: 70vw;
+        margin: 100vh auto;
+      }
+      div[alert] em{ font-size: 70%;}
 
       div[slider]{
+        height: 105vh !important;
         overflow-x: hidden; overflow-y: scroll;
         overflow: -moz-scrollbars-none; -ms-overflow-style: none;
+        scroll-snap-type: y mandatory; scroll-padding-bottom: 15vh;
       } div[slider]::-webkit-scrollbar { width: 0 !important }
-
             div[slider] section{
-              height: 90vh; width: 95vw; max-width: 1500px;
+              height: 95vh; width: 95vw; max-width: 1500px;
               margin: 100vh auto; margin-bottom: 0 !important; padding: 2.5vw;
               background: var(--token);
               border: 1px solid var(--line-color);
               border-top-left-radius: 2.5vw; border-top-right-radius: 2.5vw;
+              scroll-snap-align: start end;
             }
+      div[prompt] center{
+        z-index: 1000;
+        width: 70vw;
+        margin: 100vh auto;
+        font-size: 110%;
+      }
 
-
-
-
+      div[prompt] input{
+        left: 0; right: 0; width: 95%;
+        margin: 1vh auto; padding:0.5em;
+        border-radius: 0.5em; border: 3px solid var(--line-color);
+        font-size: 110%;
+        display:inline-block;
+      }
+      div[prompt] span{
+        width: 80%;
+        padding:0.5em;
+        display:block;
+        border-top: 3px solid var(--line-color);
+        cursor: pointer;
+      }
 
 
 /*Video Feeds*/

@@ -1,7 +1,7 @@
 if ('serviceWorker' in navigator) {
   console.log('ServiceWorker..');
   navigator.serviceWorker
-    .register('/smart-home/service-worker.js')
+    .register('/sw.js')
     .then(function(registration) {
       console.log(
         'Service Worker registration successful with scope: ',

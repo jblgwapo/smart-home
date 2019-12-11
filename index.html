@@ -64,7 +64,7 @@
     <!-- Title -->
     <title>Progressive Web App</title>
   </head>
-  <body ontouchstart="">
+  <body>
     <!-- Task Bar or alike -->
 
 
@@ -267,6 +267,12 @@
           <button onclick="Modal.slider()">Hello</button>
         </article>
 
+        <article>
+          <header>Promt Modal
+            <button onclick="Modal.prompt('Hello')">Click here!</button>
+          </header>
+        </article>
+
         <footer></footer>
       </section>
 
@@ -274,7 +280,7 @@
       <section>
         <article>
           <center>
-          <iframe src="http://192.168.8.184:8000"></iframe>
+          Hello
 
         </article></center>
         <footer></footer>
@@ -293,10 +299,25 @@
 
     <div slider modal>
       <section>
+        <header></header>
         <h1>Hello World!</h1>
         <h1>Slide me down to exit...</h1>
       </section>
     </div>
+
+
+
+    <div prompt modal>
+      <center>
+        <article><p></p>
+          <input prompt type="text"></input>
+          <span>Submit</span>
+          <span onclick="Modal.cancelPrompt()">Cancel</span>
+        </article>
+      </center>
+
+    </div>
+
 
   </body>
 </html>

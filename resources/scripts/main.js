@@ -2,7 +2,6 @@ $(document).ready(function(){
   $('nav li').click(function(){
     var target = $(this).index();
       // Disable All
-      if(target==3) window.location='/';
 
       $('main > header').each(function(i){ if(i==target){ $(this).attr('active', ''); return; } $(this).removeAttr('active');});
       $('main section').each(function(i){if(i==target){ $(this).attr('active', ''); return; } $(this).removeAttr('active');});
@@ -13,7 +12,7 @@ $(document).ready(function(){
       //$('nav li').eq(target).attr('active','');
     });
 
-    console.log();
+
 
     var timeout = 2;
     var sec=0;
@@ -25,36 +24,13 @@ $(document).ready(function(){
   );
 
 
-  // Methods for closing Modals
-  $('div[alert]').click(function (e) {
-    if ($(e.target.tagName).is('article')){return;}
-    $('div[alert] center').animate({marginTop:'100vh'}, 100, function(){
-      //Callback
-      $('div[alert]').animate({opacity:0}, 150).removeAttr('active'); });
-});
 
 
-  $('div[slider]').scroll( function(e){
-    return;
-    clearTimeout($.data(this, 'scrollTimer'));
 
-    $.data(this, 'scrollTimer', setTimeout(function() {
-        // do something
-        console.log("Scroll Event Triggered");
-        var scroll = $('div[slider]').scrollTop();
-        var threshold = $(window).height()*0.4;
-        if(scroll>threshold){
-          $('div[slider]').stop().animate({scrollTop:$(window).height()*0.90}, 100);
-        }
-        else{
-          $('div[slider]').stop().animate({scrollTop:0}, 100, function(){
-            $('div[slider]').removeAttr('active');
+console.log(navigator.onLine);
 
-          });
-        }
-    }, 50));
 
-  })
+
 
 
 
@@ -98,49 +74,38 @@ var Modal = {
     $('div[alert]').attr('active','').animate({opacity:1}, 200, function(){
       //Callback
       $('div[alert] center').stop().animate({ marginTop:'28vh' },150).animate({ marginTop:'30vh' },100);
+      $('div[alert]').click(function (e) {
+        if ($(e.target.tagName).is('article')){return;}
+        $('div[alert] center').animate({marginTop:'100vh'}, 100, function(){
+          //Callback
+          $('div[alert]').animate({opacity:0}, 150).removeAttr('active'); });
+          $('div[alert]').unbind();
     });
-  },
+  })},
   slider: function(){
     console.log('slider');
     Modal.sliderOnload=true;
-    $('div[slider]').attr('active','').animate({opacity:1}, 300, function(){
-      var sliderHeight = ($(window).height()*0.9);
-      $('div[slider]').animate({scrollTop:sliderHeight*1.03}, 200).animate({scrollTop:sliderHeight}, 150, function(){
-        // Variables
-        var lastPosition = sliderHeight;
-        var scrollWatch = setInterval(
-          function(){
-            // Variables
-            var position = $('div[slider]').scrollTop();
-            var delta = lastPosition-position;
-            lastPosition = position;
-            // if
-            if(position==sliderHeight) return;
-            if(position<sliderHeight*0.5){
+    $('div[slider]').attr('active','').animate({opacity:1}, 100, function(){
+      var sliderHeight = ($(window).height());
+      $('div[slider]').animate({scrollTop: sliderHeight}, 200, function(){
+        var slideWatcher = setInterval( function(e){
+            console.log($('div[slider]').scrollTop());
+            if($('div[slider]').scrollTop()<$(window).height()*0.5){
               $('div[slider]').stop().animate({scrollTop:0}, 100, function(){
-                $('div[slider]').removeAttr('active');});
-                clearInterval(scrollWatch);
-            }
-            if(delta){ console.log('Scrolling'); return; }
-            console.log('Scroll Ended');
-            // Modal Reset/ Exit
-
-            $('div[slider]').stop().animate({scrollTop:$(window).height()*0.90}, 100);
-            console.log('reset');
-
-
-
-
-
-
-        }, 200);
-
-      });
-
-
-    });
-
-  },
+                $('div[slider]').removeAttr('active');
+                clearInterval(slideWatcher);
+            });}},200);})})},
   sliderOnload:false,
-
+  prompt: function(message){
+    $('div[prompt] p').html(message);
+    $('div[prompt]').attr('active','').animate({opacity:1}, 200, function(){
+      //Callback
+      $('div[prompt] center').stop().animate({ marginTop:'28vh' },150).animate({ marginTop:'30vh' },100);
+    });
+  },
+  cancelPrompt: function(){
+    $('div[prompt] center').animate({marginTop:'100vh'}, 100, function(){
+      //Callback
+      $('div[prompt]').animate({opacity:0}, 150).removeAttr('active'); });
+  }
 };
