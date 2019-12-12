@@ -261,7 +261,7 @@ div[modal]{
         height: 105vh !important;
         overflow-x: hidden; overflow-y: scroll;
         overflow: -moz-scrollbars-none; -ms-overflow-style: none;
-        scroll-snap-type: y mandatory; scroll-padding-bottom: 15vh;
+        scroll-snap-type: y mandatory; scroll-padding-bottom: 15vh; scroll-behavior: smooth;
       } div[slider]::-webkit-scrollbar { width: 0 !important }
             div[slider] section{
               height: 95vh; width: 95vw; max-width: 1500px;
