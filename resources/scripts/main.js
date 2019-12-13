@@ -84,8 +84,11 @@ var Modal = {
   })},
   slider: function(){
     //Open
-    $('div[slider]').attr('active','').animate({scrollTop: ($(window).height()) }, 150, ()=>{ $('div[slider] > section').animate({paddingBottom:'+=1vh'},100).animate({paddingBottom:'-=1vh'},100)});
 
+    $('div[slider]').attr('active','');
+    $('div[backdrop]').animate({opacity:1},250, function(){
+      $('div[slider]').attr('active','').animate({scrollTop: ($(window).height()) }, 150, ()=>{ $('div[slider] > section').animate({paddingBottom:'+=1vh'},100).animate({paddingBottom:'-=1vh'},100)});
+    });
     //Bind
     setTimeout( function(){
       $('div[slider]').bind('scroll', function() {
@@ -96,7 +99,7 @@ var Modal = {
             $('div[slider]').removeAttr('active').unbind();
           }
         });// bind
-      },200);//timeout
+      },700);//timeout
       },
   sliderOnload:false,
   prompt: function(message, callback){
