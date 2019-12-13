@@ -84,10 +84,10 @@ var Modal = {
   })},
   slider: function(){
     //Open
-
+    $('div[slider]>section').css({paddingBottom:'+=3vh'});
     $('div[slider]').attr('active','');
 
-      $('div[slider]').attr('active','').animate({scrollTop: ($('div[slider]').height()) }, 200);
+      $('div[slider]').attr('active','').animate({scrollTop: ($('div[slider]').height()) }, 250, ()=>{ $('div[slider]>section').animate({paddingBottom:'-=3vh'},150) });
     //Bind
     setTimeout( function(){
       $('div[slider]').bind('scroll', function() {
@@ -98,7 +98,7 @@ var Modal = {
             $('div[slider]').removeAttr('active').unbind();
           }
         });// bind
-      },50);//timeout
+      },200);//timeout
       },
   sliderOnload:false,
   prompt: function(message, callback){
