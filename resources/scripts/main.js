@@ -86,10 +86,9 @@ var Modal = {
     //Open
 
     $('div[slider]').attr('active','');
-    $('div[backdrop]').animate({opacity:1},250, function(){
-      $('div[slider]').attr('active','').animate({scrollTop: ($(window).height()) }, 150, ()=>{ $('div[slider] > section').animate({paddingBottom:'+=1vh'},100).animate({paddingBottom:'-=1vh'},100)});
-    });
-    //Bind
+    $('div[backdrop]').animate({opacity:1}, 250, function(){
+      $('div[slider]').attr('active','').animate({scrollTop: ($('div[slider]').height()) }, 150, ()=>{ $('div[slider] > section').animate({paddingBottom:'+=1vh'},100).animate({paddingBottom:'-=1vh'},100)});
+    });//Bind
     setTimeout( function(){
       $('div[slider]').bind('scroll', function() {
         var scroll = $('div[slider]').scrollTop();
@@ -99,7 +98,7 @@ var Modal = {
             $('div[slider]').removeAttr('active').unbind();
           }
         });// bind
-      },700);//timeout
+      },400);//timeout
       },
   sliderOnload:false,
   prompt: function(message, callback){
