@@ -84,28 +84,28 @@ var Modal = {
   })},
   slider: function(){
     //Open
-    $('div[slider]').attr('active','').animate({scrollTop: ($(window).height()) }, 150, ()=>{ $('div[slider] > section').animate({paddingBottom:'+=1vh'},100).animate({paddingBottom:'-=1vh'},100);} );
+    $('div[slider]').attr('active','').animate({scrollTop: ($(window).height()) }, 150, ()=>{ $('div[slider] > section').animate({paddingBottom:'+=1vh'},100).animate({paddingBottom:'-=1vh'},100, function(){$('div[backdrop]').animate({opacity:1}, 200); });} );
     //Bind
-    $('div[slider]').bind('scroll', function() {
-    var scroll = $('div[slider]').scrollTop();
-    var height = $(window).height();
-    $('div[backdrop]').css({opacity:0.95*scroll/height});
-    if(scroll==0){
-        $('div[slider]').removeAttr('active').unbind();
-    }
-    });
+    setTimeout( function(){
+      $('div[slider]').bind('scroll', function() {
+        var scroll = $('div[slider]').scrollTop();
+        var height = $(window).height();
+        $('div[backdrop]').css({opacity:(0.9*scroll)/height});
+          if(scroll==0){
+            $('div[slider]').removeAttr('active').unbind();
+          }
+        });// bind
+      },1000);//timeout
       },
   sliderOnload:false,
-  prompt: function(message){
+  prompt: function(message, callback){
     $('div[prompt] p').html(message);
     $('div[prompt]').attr('active','').animate({opacity:1}, 200, function(){
       //Callback
       $('div[prompt] center').stop().animate({ marginTop:'28vh' },150).animate({ marginTop:'30vh' },100);
     });
+    $('span[prompt-submit]').click( function(){ console.log('span'); $('div[prompt] center').animate({marginTop:'100vh'}, 100, ()=>{ $('div[prompt]').animate({opacity:0}, 150).removeAttr('active'); }); callback($('[prompt-response]').val()); return;});
+    $('span[prompt-cancel]').click( function(){ console.log('span'); $('div[prompt] center').animate({marginTop:'100vh'}, 100, ()=>{ $('div[prompt]').animate({opacity:0}, 150).removeAttr('active'); $('[prompt-response]').val(''); }); });
   },
-  cancelPrompt: function(){
-    $('div[prompt] center').animate({marginTop:'100vh'}, 100, function(){
-      //Callback
-      $('div[prompt]').animate({opacity:0}, 150).removeAttr('active'); });
-  }
+
 };
