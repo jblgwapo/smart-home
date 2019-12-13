@@ -269,7 +269,7 @@
 
         <article>
           <header>Promt Modal
-            <button onclick="Modal.prompt('Hello')">Click here!</button>
+            <button onclick="Modal.prompt('Hello', function(mes){alert(mes);})">Click here!</button>
           </header>
         </article>
 
@@ -281,8 +281,9 @@
         <article>
           <center>
           Hello
-
-        </article></center>
+          <img style="width: 100%; height: auto; -webkit-user-select: none; display: block; margin: auto; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); cursor: zoom-in;" src="https://c204dbbf.ngrok.io/">
+          </center>
+        </article>
         <footer></footer>
       </section>
     </main>
@@ -312,9 +313,9 @@
     <div prompt modal>
       <center>
         <article><p></p>
-          <input prompt type="text"></input>
-          <span>Submit</span>
-          <span onclick="Modal.cancelPrompt()">Cancel</span>
+          <input prompt-response type="text"></input>
+          <span prompt-submit>Submit</span>
+          <span prompt-cancel>Cancel</span>
         </article>
       </center>
 
