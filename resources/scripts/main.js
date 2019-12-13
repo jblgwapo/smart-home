@@ -87,7 +87,7 @@ var Modal = {
 
     $('div[slider]').attr('active','');
 
-      $('div[slider]').attr('active','').animate({scrollTop: ($('div[slider]').height()) }, 100, ()=>{ $('div[slider]>section').animate({paddingBottom:'+=3vh'},50).animate({paddingBottom:'-=3vh'},100) });
+      $('div[slider]').attr('active','').animate({scrollTop: ($('div[slider]').height()) }, 200);
     //Bind
     setTimeout( function(){
       $('div[slider]').bind('scroll', function() {
