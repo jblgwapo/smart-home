@@ -215,25 +215,7 @@
         <article>
           <header>Camera Feed 1</header>
           <img id="stream" src="" stream>
-        <script>
-            const img = document.querySelector('#stream');
-            const WS_URL = 'ws://0.tcp.jp.ngrok.io:10897';
-            const ws = new WebSocket(WS_URL);
-            ws.onerror = function() {
-               location.reload(true);
-            }
-            let urlObject;
-            ws.onmessage = message => {
-                const arrayBuffer = message.data;
-                if(urlObject){
-                    URL.revokeObjectURL(urlObject);
-                }
-                urlObject = URL.createObjectURL(new Blob([arrayBuffer]));
-                delete arrayBuffer;
-                delete message;
-                img.src = urlObject;
-            }
-        </script>
+        
         </article>
         <footer></footer>
       </section>
