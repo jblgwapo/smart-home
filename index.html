@@ -60,14 +60,19 @@
     <script src="resources/scripts/engine.js"></script>
     <script src="resources/scripts/main.js"></script>
     <!-- Style-->
-    <link id="style" rel="stylesheet" type="text/css" href="resources/style/main.css">
+    <link id="style" rel="stylesheet" type="text/css" href="resources/style/responsive.css">
     <!-- Title -->
     <title>Progressive Web App</title>
   </head>
   <body>
-    <!-- Task Bar or alike -->
+    <!-- Headers / Main title of a page -->
+    <header active>Graphs Example</header>
+    <header>Buttons Example</header>
+    <header>Modals Example</header>
+    <header>Page 4</header>
 
 
+    <!-- Navigation Bar or alike -->
     <nav>
       <ul>
         <!-- Menu Item--><li selected><span icon>&#10025;</span><span label>One</span></li><!-- Menu Item-->
@@ -78,16 +83,13 @@
     </nav>
 
     <main>
-      <!-- Headers / Main title of a page -->
-      <header active>Graphs Example</header>
-      <header>Buttons Example</header>
-      <header>Modals Example</header>
-      <header>Page 4</header>
+
+
 
       <!-- Seections are the page itself -->
       <section active>
         <article>
-          <header>Three Columns
+          <header>Today
             <label class="switch"><input type="checkbox"><span class="slider"></span></label>
           </header>
           <div graph items="3">
@@ -104,10 +106,11 @@
             </div>
 
           </div>
+          <a href="">Refresh</a><br>
           The quick brown fox jumps over the lazy dog. :)
         </article>
         <article>
-          <header>Four Columns</header>
+          <header>This Week</header>
           <div graph>
             <div column>
               <div column-fill></div>
@@ -151,7 +154,7 @@
           The quick brown fox jumps over the lazy dog. :)
         </article>
         <article>
-          <header>Five Columns</header>
+          <header>This Month</header>
           <div graph items="5">
             <div column>
               <div column-fill></div>
@@ -174,76 +177,7 @@
           </div>
           The quick brown fox jumps over the lazy dog. :)
         </article>
-        <article>
-          <header>Six Columns</header>
-          <div graph items="6">
-            <div column>
-              <div column-fill></div>
-            </div>
-            <div column>
-              <div column-fill></div>
-            </div>
-            <div column>
-              <div column-fill></div>
-            </div>
-            <div column>
-              <div column-fill></div>
-            </div>
-            <div column>
-              <div column-fill></div>
-            </div>
-            <div column>
-              <div column-fill></div>
-            </div>
-            </div>
 
-          </div>
-          The quick brown fox jumps over the lazy dog. :)
-        </article>
-        <article>
-          <header>Twelve Columns</header>
-          <div graph items="12">
-            <div column>
-              <div column-fill></div>
-            </div>
-            <div column>
-              <div column-fill></div>
-            </div>
-            <div column>
-              <div column-fill></div>
-            </div>
-            <div column>
-              <div column-fill></div>
-            </div>
-            <div column>
-              <div column-fill></div>
-            </div>
-            <div column>
-              <div column-fill></div>
-            </div>
-            <div column>
-              <div column-fill></div>
-            </div>
-            <div column>
-              <div column-fill></div>
-            </div>
-            <div column>
-              <div column-fill></div>
-            </div>
-            <div column>
-              <div column-fill></div>
-            </div>
-            <div column>
-              <div column-fill></div>
-            </div>
-            <div column>
-              <div column-fill></div>
-            </div>
-            </div>
-
-          </div>
-          The quick brown fox jumps over the lazy dog. :)
-        </article>
 
         <footer></footer>
       </section>
@@ -279,10 +213,27 @@
       <!-- Tab 3 -->
       <section>
         <article>
-          <center>
-          Hello
-          <img style="width: 100%; height: auto; -webkit-user-select: none; display: block; margin: auto; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); cursor: zoom-in;" src="https://c204dbbf.ngrok.io/">
-          </center>
+          <header>Camera Feed 1</header>
+          <img id="stream" src="" stream>
+        <script>
+            const img = document.querySelector('#stream');
+            const WS_URL = 'ws://0.tcp.jp.ngrok.io:10897';
+            const ws = new WebSocket(WS_URL);
+            ws.onerror = function() {
+               location.reload(true);
+            }
+            let urlObject;
+            ws.onmessage = message => {
+                const arrayBuffer = message.data;
+                if(urlObject){
+                    URL.revokeObjectURL(urlObject);
+                }
+                urlObject = URL.createObjectURL(new Blob([arrayBuffer]));
+                delete arrayBuffer;
+                delete message;
+                img.src = urlObject;
+            }
+        </script>
         </article>
         <footer></footer>
       </section>

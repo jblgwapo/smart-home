@@ -1,40 +1,16 @@
-/*
-Format
+/* Responsive css design by John Brell G. Ladiero */
+/* Format
 
-
-Container
-  top bot left right Sizing  min size max size
-  margin padding position display
-  background color overflow
-  borders and radius
-  text and font style
-  z index
-  special
-  webkit
+top bottom left right display position
+Sizes margin padding
+Background
+Fonts
+borders and radius
+Webkit and extras
+z-index
 */
 
-
-/*
-Variable StyleSheets
-Childrens are indented with three \t relative to it's parent
-Keep this message long to maintain readability among different parts of the code
-
-Creator: John Brell G. Ladiero
-Copyright 2019-2020
- */
-
-
-
-
-:root{
-  color-scheme: light dark;
-  --background-translucent:rgba(255,255,255,0.5);
-  --background-blend-in:rgba(240,240,240,0.5);
-  --token: linear-gradient(#aeaeae, #ababab );
-  --selected: blue;
-  --graph-fill: blue;
-  --line-color: #fefefe;
-}
+/* Dark Mode */
       @media (prefers-color-scheme: light) {
             :root{
               --background-translucent:rgba(214,214,214,0.7);
@@ -42,7 +18,9 @@ Copyright 2019-2020
               --token: linear-gradient(#fcfcfc,#fafafa);
               --line-color: #e7e7e7;
             }
+
             body { background-color:#f0f0f0; color:#3d3d3d;}
+            nav { background: rgba(200,200,200,0.7);}
       }
       @media (prefers-color-scheme: dark) {
             :root{
@@ -54,184 +32,188 @@ Copyright 2019-2020
             body { background-color:#000000; color:#e7e7e7; }
       }
 
-      *{ margin:0; padding: 0; }
-      html { height: 100vh; width: 100vw; overflow: hidden;}
 
-      body{
-        top:0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh;
-        font-family: helvetica; overflow: scroll;
-        overflow: -moz-scrollbars-none; -ms-overflow-style: none;
-        -webkit-user-select: none;
-        -webkit-tap-highlight-color: transparent;
-        -webkit-touch-callout: none;
-        scroll-snap-type: y mandatory;
+
+* { margin: 0; padding: 0;
+    box-sizing: border-box;
+  }
+
+html { overflow: hidden; }
+body { top:0; left: 0; right: 0; bottom: 0;
+       width: 100vw; height: 100vh;
+       font-family: helvetica; overflow: hidden;
+       overflow: -moz-scrollbars-none; -ms-overflow-style: none;
+       -webkit-user-select: none;
+       -webkit-tap-highlight-color: transparent;
+       -webkit-touch-callout: none;
       } body::-webkit-scrollbar { width: 0 !important }
-      [active]{display: block !important;}
+        [active]{ display: block; }
 
 
-/*
-Header StyleSheets
-Childrens are indented with three \t relative to it's parent
-Keep this message long to maintain readability among different parts of the code
+/* Global Properties and common styles */
+/* Put backgrounds cursors and paddings here */
+body> header { top:0; left:0; right:0; display: none; position: fixed;
+          background: rgba(0,70,140,0.77); color: white;
+          font-weight: bold;
+          border-bottom: 1px solid rgba(0,0,0,0.5);
+          -webkit-backdrop-filter: blur(50px); backdrop-filter: blur(10px);
+          z-index: 100;
+        }
 
-Creator: John Brell G. Ladiero
-Copyright 2019-2020
- */
+nav { position: fixed;
+      font-weight: bold;
+      z-index: 100; background: rgba(0,70,140,0.77); color: white;
+      -webkit-backdrop-filter: blur(50px); backdrop-filter: blur(10px);
+    }
+      nav > lu { display: inline-block;
+                 margin: auto;
+                 list-style-type: none;
+               }
+               nav li { cursor: pointer; color:#ccc;}
+                      nav li[selected]{ color:white; }
 
-
-
-
-/*
-Navigation StyleSheets
-Childrens are indented with three \t relative to it's parent
-Keep this message long to maintain readability among different parts of the code
-
-Creator: John Brell G. Ladiero
-Copyright 2019-2020
-*/
-nav {
-  bottom:0; left: 0; right: 0; width:100vw;
-  margin:0; padding-top:0.7vh; padding-bottom:2.8vh; position: fixed;
-  background: var(--background-translucent); color:inherit;
-  border-top: 1px solid var(--line-color);
-  text-align: center;
-  z-index: 500;
-  -webkit-backdrop-filter: blur(50px);
-  backdrop-filter: blur(10px);
-}
-      nav > lu {
-        margin: auto; display: inline-block;
-        text-align: justify;
-        list-style-type: none;
+main { height: 100vh; width: 100%;
+       margin: auto;
+       overflow-y:scroll; scroll-snap-type: y mandatory; scroll-behavior: smooth;
+       scroll-snap-padding: 5.17em;
       }
-            nav li {
-              width:20%; min-width:10%; max-width:7em;
-              padding:0.3%; display:inline-block;
-              text-align: center;
-              cursor: pointer;
-            } nav li[selected]{ color:var(--selected); transition: color 0.7s;}
-                    nav  span[icon]{ width:100%; font-size: 170%; text-align: center; display:block;}
-                    nav  span[label]{ width:100%; font-size: 90%; font-weight:500; text-align: center; display:block;}
+      section { width: 100%; display: none;}
+              article { min-height: 500px; max-height: 500px ;/* Temporary */ overflow: hidden; background: var(--token);
+                        width: 98%; margin: 10px auto;
+                        border: 1px solid white; border-radius: 0.7em;
+                        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1), 0 6px 15px 0 rgba(0, 0, 0, 0.05);
+                        scroll-snap-align: center;
+                      }
+                      article > header { position: relative;
+                                         margin-top: 0; margin-bottom: 0.5em; display: block;
+                                         font-size: 120%; font-weight: 700;
+                                        }
+                                        header > button {
+                                          font-size: 0.707em;
+                                          margin-left: 1em;
+                                          float:right;
+                                        }
 
 
-/*
-Main StyleSheets
-Childrens are indented with three \t relative to it's parent
-Keep this message long to maintain readability among different parts of the code
 
-Creator: John Brell G. Ladiero
-Copyright 2019-2020
-*/
-
-main > header {
-  top:0; left: 0; right: 0; height: auto; display: none;
-  margin: 0; padding-top: 5vh; padding-bottom:1vh; padding-left: 5vw; padding-right: 5vw;  position: sticky;
-  background: var(--background-blend-in); color: inherit;
-  font-size: 170%; font-weight: bold; vertical-align: bottom;
-  z-index: 500;
-  -webkit-backdrop-filter: blur(50px);
-  backdrop-filter: blur(10px);
-}
-main > section {
-  width:90vw; height: auto;
-  margin: auto; margin-bottom: 15vh; padding:0; position: relative; display: none;
-  background: none; color:inherit;
-  font-size: 100%;
-}
-      section > header {
-        height: auto;
-        margin:1em auto; padding:0; position: relative; display: block;
-        background: none; color:inherit;
-        font-size: 150%; font-weight: bold;
-      }
-      article {
-        min-width: 10em;
-        margin:1em auto; padding: 1em; position: relative;
-        background: var(--token); display: block;
-        border-radius: 1em; border: 1px solid var(--line-color);
-        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1), 0 6px 15px 0 rgba(0, 0, 0, 0.05);
-        scroll-snap-align: center;
-      }
-            article > header {
-              top:0; left:0; right:0; position: relative;
-              margin-top: 0; margin-bottom: 0.5em; display: block;
-              font-size: 140%; font-weight: 700;
-            }
-      section > footer {
-        margin:1em auto; min-width: 10em;
-        text-align: center;
-      }
-
-
-/*
-GUI StyleSheets / Necessities
-Childrens are indented with three \t relative to it's parent
-Keep this message long to maintain readability among different parts of the code
-
-Creator: John Brell G. Ladiero
-Copyright 2019-2020
-*/
-/* Buttons */
 button {
   font-size: 1em;
   padding: 0.7em;
   display: inline-block;
   background: #aaa;
   border: 1px solid #aaa;
-  border-radius: 0.5em;
+
 }
-header > button {
-  font-size: 0.707em;
-  margin-left: 1em;
-  float:right;
+
+
+
+
+
+/* Sizing Styles Do not include backgrounds */
+/* Mobile */
+@media screen and (min-width:320px) {
+  body > header[active] {
+                   padding-top: 2em; padding-bottom: 0.3em; padding-left:4%;
+                   font-size: 1.5em;
+                   -webkit-backdrop-filter: blur(50px); backdrop-filter: blur(10px);
+                 }
+  main { position: relative;
+         width: 100vw; padding-bottom: 30vh;
+      } main::-webkit-scrollbar { width: 0 !important }
+  nav{ bottom: 0; left:0; right:0;
+       padding-bottom: 2em; padding-top: 0.3em;
+       width: 100vw; text-align: center;
+
+      }
+      nav li { width:20%; min-width:10%; max-width:7em;
+               padding:0.3%; display:inline-block;
+               text-align: center;
+              }
+              nav li > span{ display: block; }
+
+  section{ width: 96vw; margin: 6.5em auto;}
+  article{ width: 100%; padding: 0.7em; }
+
+
 }
+/* Tablet */
+@media screen and (min-width:768px) {
+  body > header[active] { padding-top: 0.5em; }
+  main { max-width: 90%;}
+  section[active] { width: 100%; margin-top:4em; display: flex; align-items: flex-start; flex-grow: 1; flex-wrap: wrap;}
+  article{ margin: 3px; max-width: 32%; padding: 1%; display: inline-block; flex: shrink; }
+  nav { padding-bottom: 0.5em;}
+  nav li span{ display: inline-block; padding: 3px;}
+}
+/* Desktops */
+@media screen and (min-width:1200px) {
+
+  main { width: 1600px; }
+
+
+}
+
+
 
 
 /* Toggle Switches */
 
 /* The switch - the box around the slider */
-.switch { right: 0; position: absolute; display: inline-block; width: 2em; height: 1em; border:1px solid #aaa; border-radius: 1em;}
-.switch input { opacity: 0; width: 0; height: 0; }
-.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #aaa; -webkit-transition: .3s; transition: .3s; border-radius: 1em;}
-.slider:before { position: absolute; content: ""; height: 0.96em; width: 0.96em; left: 0em; background-color: #f3f3f3; border:0.1px solid #aaa; border-radius: 1em; -webkit-transition: .4s; transition: .4s; }
-input:checked + .slider { background-color: #1db100;  }
-input:focus + .slider { box-shadow: 0 0 1px #2196F3; }
-input:checked + .slider:before { -webkit-transform: translateX(1em); -ms-transform: translateX(1em); transform: translateX(1em); }
-
-
-/* Graphs */
-div[graph]{
-  width: 100%; height: 50vh; max-width: 600px;
-  position: relative;
-  display: flex;
-  background: rgba(128,128,128,0.07);
-  border-radius: 3px;
+/* The switch - the box around the slider */
+.switch {
+  position: absolute;
+  right: 0;
+  display: inline-block;
+  width: 2em;
+  height: 1em;
 }
-      div[column]{
-        top:0; bottom:0; width: 98%;
-        position: relative; display: inline-block;
-        margin-left:1%; margin-right:1%;
-      }
-            /* Graph Sizes. Default is 2 */
-            div[items="3"] div[column]{ width:31.33%;}
-            div[items="4"] div[column]{ width:23%;}
-            div[items="5"] div[column]{ width:18%;}
-            div[items="6"] div[column]{ width:14.67%;}
-            div[items="7"] div[column]{ width:12.28%;}
-            div[items="8"] div[column]{ width:10.5%;}
-            div[items="9"] div[column]{ width:9.11%;}
-            div[items="10"] div[column]{ width:8%;}
-            div[items="11"] div[column]{ width:7.09%;}
-            div[items="12"] div[column]{ width:6.33%;}
 
-      div[column-fill]{
-        bottom: 0; left: 0; right: 0; height:50%; position: absolute;
-        background: var(--graph-fill);
-        border-radius: 5px;
-        transition: height 1s;
-      }
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
 
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #aaa;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 1em;
+}
 
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 0.9em;
+  width: 0.9em;
+  border: 0.09em solid #aaa;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 1em;
+}
+
+input:checked + .slider {
+  background-color: #3abd00;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(1em);
+  -ms-transform: translateX(1em);
+  transform: translateX(1em);
+}
 
 /*
 GUI Modals / Necessities
@@ -241,93 +223,42 @@ Keep this message long to maintain readability among different parts of the code
 Creator: John Brell G. Ladiero
 Copyright 2019-2020
 */
-div[modal]{
-  top:0; left: 0; right: 0; height: 100vh; width: 100vw;
-  position: fixed; display: none; opacity: 1;
-  background: rgba(0,0,0,0.5);
-  -webkit-backdrop-filter: blur(50px);
-  backdrop-filter: blur(10px);
-  z-index: 999;
-  }
-
-      div[alert] center{
-        z-index: 1000;
-        width: 70vw;
-        margin: 100vh auto;
-      }
-      div[alert] em{ font-size: 70%;}
-
-div[slider]{
-  top:0; left: 0; right: 0; height: 105vh!important; width: 100vw!important;
-  position: fixed; display: none; opacity: 1;
-  z-index: 999;
-  overflow-x: hidden; overflow-y: scroll;
-  overflow: -moz-scrollbars-none; -ms-overflow-style: none;
-  scroll-snap-type: y mandatory; scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-} div[slider]::-webkit-scrollbar { width: 0 !important; }
-      div[backdrop]{
-        top:0; left: 0; right: 0; bottom: 0; height: 100vh; width: 100vw;
-        position: fixed; display: block; pointer-events: none;
-        background: rgba(0,0,0,1); opacity: 0;
-        -webkit-backdrop-filter: blur(50px);
-        backdrop-filter: blur(10px); z-index: -1;
-      }
-      div[slider] > header{ height: 100vh; scroll-snap-align:start;z-index: 999; }
-      div[slider] > section{
-        height: 95vh; width: 94vw; max-width: 1500px;
-        margin: 10vh auto; margin-bottom: 0 !important; padding: 2.5vw;
-        background: var(--token);
-        border: 1px solid var(--line-color);
-        border-top-left-radius: 2.5vw; border-top-right-radius: 2.5vw;
-        scroll-snap-align:start end; z-index: 999;
-      }
-
-div[prompt] center{
-  z-index: 1000;
-  width: 90vw !important;
-  max-width: 1000px;
-  margin: 100vh auto;
-  font-size: 110%;
-}
-
-          div[prompt] input{
-            width: 75vw; max-width: 900px;
-            padding:0.5em;
-            margin: 1vh auto;
-            border-radius: 0.5em; border: 3px solid var(--line-color);
-            font-size: 110%;
-            display:block;
-          }
-          div[prompt] span{
-            width: 75vw; max-width: 900px;
-            padding:0.5em;
-            display:block;
-            border-top: 3px solid var(--line-color);
-            cursor: pointer;
-          }
-
-
-/*Video Feeds*/
-
-iframe{
-  height: 67.5vw; width: 80vw;
-  border: 0px; border-radius: 0.3em;
-}
+div[modal] {display: none; }
+ div[alert]{ display: none; }
+ div[slider]{ display: none; }
 
 
 
+ /* Graphs */
+ div[graph]{
+   width: 100%; height: 300px;
+   position: relative;
+   display: flex;
+   background: linear-gradient(rgba(128,128,128,0.07),rgba(128,128,128,0.3) );
+
+ }
+       div[column]{
+         top:0; bottom:0; width: 98%;
+         position: relative; display: inline-block;
+         margin-left:1%; margin-right:1%;
+       }
+             /* Graph Sizes. Default is 2 */
+             div[items="3"] div[column]{ width:31.33%;}
+             div[items="4"] div[column]{ width:23%;}
+             div[items="5"] div[column]{ width:18%;}
+             div[items="6"] div[column]{ width:14.67%;}
+             div[items="7"] div[column]{ width:12.28%;}
+             div[items="8"] div[column]{ width:10.5%;}
+             div[items="9"] div[column]{ width:9.11%;}
+             div[items="10"] div[column]{ width:8%;}
+             div[items="11"] div[column]{ width:7.09%;}
+             div[items="12"] div[column]{ width:6.33%;}
+
+       div[column-fill]{
+         bottom: 0; left: 0; right: 0; height:50%; position: absolute;
+         background: linear-gradient(rgb(0,200,0), rgb(0,170,0));
+         transition: height 1s;
+       }
 
 
-/*
-Format
-Container
-  top bot left right Sizing  min size max size
-  margin padding position display
-  background color overflow
-  borders and radius
-  text and font style
-  z index
-  special
-  webkit
-*/
+img[stream]{width: 100%; height: auto; border: none;}
