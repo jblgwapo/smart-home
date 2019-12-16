@@ -136,7 +136,7 @@
         </article>
 
         <article>
-          <header>Promt Modal
+          <header>Prompt Modal
             <button onclick="Modal.prompt('Hello', function(mes){alert(mes);})">Click here!</button>
           </header>
         </article>
@@ -148,8 +148,26 @@
       <section>
         <article>
           <header>Camera Feed 1</header>
-          <iframe id="stream" src="http://cd8683ad.jp.ngrok.io"  stream></iframe>
+          <div style="display:flex;"><img id="stream" style="width:640px; height:480px;"></div>
+          <script>
 
+            const img = document.querySelector('stream');
+            const WS_URL = 'ws://0.tcp.jp.ngrok.io:13864';
+            const ws = new WebSocket(WS_URL);
+            ws.onerror = function() {
+               location.reload(true);
+            }
+            let urlObject;
+            ws.onmessage = message => {
+                const arrayBuffer = message.data;
+                if(urlObject){
+                    URL.revokeObjectURL(urlObject);
+                }
+                urlObject = URL.createObjectURL(new Blob([arrayBuffer]));
+                delete arrayBuffer;                delete message;                img.src = urlObject;
+            }
+
+          </script>
         </article>
         <footer></footer>
       </section>
