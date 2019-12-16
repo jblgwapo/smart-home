@@ -3,7 +3,7 @@ $(document).ready(function(){
     var target = $(this).index();
       // Disable All
 
-      $('main > header').each(function(i){ if(i==target){ $(this).attr('active', ''); return; } $(this).removeAttr('active');});
+      $('body > header').each(function(i){ if(i==target){ $(this).attr('active', ''); return; } $(this).removeAttr('active');});
       $('main section').each(function(i){if(i==target){ $(this).attr('active', ''); return; } $(this).removeAttr('active');});
       $('nav li').each(function(i){if(i==target){ $(this).attr('selected', ''); return; } $(this).removeAttr('selected');});
       // Select One
@@ -28,24 +28,78 @@ $(document).ready(function(){
 
 
 console.log(navigator.onLine);
+// TEst
+
+        var options = {
+
+
+            chart: {
+                height: 350,
+                type: 'bar',
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: false,
+                    columnWidth: '55%',
+                    endingShape: 'rounded'
+                },
+            },
+            dataLabels: {
+                enabled: false
+            },
+            stroke: {
+                show: true,
+                width: 2,
+                colors: ['transparent']
+            },
+            series: [{
+                name: 'Refrigerator',
+                data: [44, 55, 57, 56, 61, 58, 63, 60, 66]
+            }, {
+                name: 'Lamp',
+                data: [76, 85, 101, 98, 87, 90, 91, 114, 94]
+            }, {
+                name: 'Aircon',
+                data: [35, 41, 36, 26, 45, 48, 52, 53, 41]
+            }],
+            xaxis: {
+                categories: ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
+            },
+            yaxis: {
+
+            },
+            fill: {
+                opacity: 1
+
+            },
+            tooltip: {
+                y: {
+                    formatter: function (val) {
+                        return "" + val + " kW"
+                    }
+                }
+            }
+        }
+
+        var today = new ApexCharts( document.querySelector("#todayCharts"), options );
+        var thisWeek = new ApexCharts( document.querySelector("#weeklyCharts"), options );
+        var thisMonth = new ApexCharts( document.querySelector("#monthlyCharts"), options );
+
+        today.render();
+        thisWeek.render();
+        thisMonth.render();
 
 
 
 
 
 
+
+// test end
 });
 
 
-function graphColumn(title, className, items){
-  if(items<=2)return;
-  content=``;
-  for(i=0;i<items;i++){
-    content+=`<div column><div column-fill class="${className}"></div></div>`;
-  }
-  var template = `<header>${title}</header><div graph items="${items}>${content}</div>"`;
-  return template;
-}
+
 
 function toggleSwitchRequest(target){
   event.preventDefault();
