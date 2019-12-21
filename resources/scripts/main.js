@@ -29,65 +29,9 @@ $(document).ready(function(){
 
 console.log(navigator.onLine);
 // TEst
-
-        var options = {
-
-
-            chart: {
-                height: 350,
-                type: 'bar',
-            },
-            plotOptions: {
-                bar: {
-                    horizontal: false,
-                    columnWidth: '55%',
-                    endingShape: 'rounded'
-                },
-            },
-            dataLabels: {
-                enabled: false
-            },
-            stroke: {
-                show: true,
-                width: 2,
-                colors: ['transparent']
-            },
-            series: [{
-                name: 'Refrigerator',
-                data: [44, 55, 57, 56, 61, 58, 63, 60, 66]
-            }, {
-                name: 'Lamp',
-                data: [76, 85, 101, 98, 87, 90, 91, 114, 94]
-            }, {
-                name: 'Aircon',
-                data: [35, 41, 36, 26, 45, 48, 52, 53, 41]
-            }],
-            xaxis: {
-                categories: ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
-            },
-            yaxis: {
-
-            },
-            fill: {
-                opacity: 1
-
-            },
-            tooltip: {
-                y: {
-                    formatter: function (val) {
-                        return "" + val + " kW"
-                    }
-                }
-            }
-        }
-
-        var today = new ApexCharts( document.querySelector("#todayCharts"), options );
-        var thisWeek = new ApexCharts( document.querySelector("#weeklyCharts"), options );
-        var thisMonth = new ApexCharts( document.querySelector("#monthlyCharts"), options );
-
-        today.render();
-        thisWeek.render();
-        thisMonth.render();
+graph('today');
+graph('weekly');
+graph('monthly');
 
 
 
@@ -97,6 +41,41 @@ console.log(navigator.onLine);
 
 // test end
 });
+
+
+
+function graph(mode='today', chart){
+  var chartTemplate = {
+      chart: { height: 350, type: 'bar', },
+      plotOptions: {
+          bar: { horizontal: false, columnWidth: '55%', endingShape: 'rounded'},
+          },
+      dataLabels: { enabled: false },
+      stroke: { show: true, width: 2, colors: ['transparent'] },
+      series: [
+        { name: 'Refrigerator',   data: [44, 55, 57, 56, 61, 58, 63, 60, 66,] },
+        { name: 'Lamp',           data: [76, 85, 101, 98, 87, 90, 91, 114, 94] },
+        { name: 'Aircon',         data: [35, 41, 36, 26, 45, 48, 52, 53, 41]}
+      ],
+      xaxis: { categories: ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],},
+      yaxis: {},
+      fill: {opacity: 1 },
+      tooltip: { y: { formatter: function (val) { return "" + val + " kW"}}}
+  }
+
+
+  switch (mode) {
+    case 'today': chartTemplate.xaxis.categories = ['1pm','2pm','3pm','4pm','5pm','6pm','7pm','8pm'];  break;
+    case 'weekly': chartTemplate.xaxis.categories = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu','Fri','Sat'];  break;
+    case 'monthly': chartTemplate.xaxis.categories = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];  break;
+    default:
+  }
+  new ApexCharts( document.querySelector(`#${mode}Charts`), chartTemplate ).render();
+
+
+}
+
+
 
 
 
@@ -123,46 +102,67 @@ function closeAlert(){
 
 
 var Modal = {
-  alert: function(message){
-    $('div[alert] article').html(message);
-    $('div[alert]').attr('active','').animate({opacity:1}, 200, function(){
-      //Callback
-      $('div[alert] center').stop().animate({ marginTop:'28vh' },150).animate({ marginTop:'30vh' },100);
-      $('div[alert]').click(function (e) {
-        if ($(e.target.tagName).is('article')){return;}
-        $('div[alert] center').animate({marginTop:'100vh'}, 100, function(){
-          //Callback
-          $('div[alert]').animate({opacity:0}, 150).removeAttr('active'); });
-          $('div[alert]').unbind();
+  container:function(content, button='cancel', type='cancel'){ return `<div class="modal" id="modal-${this.count}"><div class="modal-container" id="container-${this.count}">${content} <button class="modal-${type}" onclick="Modal.close(${this.count})">${button}</button></div></div>`; },
+  text:function(content){ return `<p class="modal-content">${content}</p>` },
+  button:function(label, callback){ return `<button class="modal-button" onclick="${callback}; Modal.close(${this.count})">${label}</button>`},
+  count:0,
+  alert:function(message){
+    $('body').append(this.container(this.text(message), 'Okay', 'button'));
+    var id = Modal.count; Modal.count++;
+    //Animate
+    $('#modal-'+id).animate( {opacity:'1'}, 100, function(){
+      $('#container-'+id).animate( {maxHeight:'50vh', maxWidth:'700px'}, 100,);
     });
-  })},
-  slider: function(){
-    //Open
-    $('div[slider]>section').css({paddingBottom:'+=3vh'});
-    $('div[slider]').attr('active','');
-
-      $('div[slider]').attr('active','').animate({scrollTop: ($('div[slider]').height()) }, 250, ()=>{ $('div[slider]>section').animate({paddingBottom:'-=3vh'},150) });
-    //Bind
-    setTimeout( function(){
-      $('div[slider]').bind('scroll', function() {
-        var scroll = $('div[slider]').scrollTop();
-        var height = $(window).height();
-        $('div[backdrop]').css({opacity:(0.9*scroll)/height});
-          if(scroll==0){
-            $('div[slider]').removeAttr('active').unbind();
-          }
-        });// bind
-      },200);//timeout
-      },
-  sliderOnload:false,
-  prompt: function(message, callback){
-    $('div[prompt] p').html(message);
-    $('div[prompt]').attr('active','').animate({opacity:1}, 200, function(){
-      //Callback
-      $('div[prompt] center').stop().animate({ marginTop:'28vh' },150).animate({ marginTop:'30vh' },100);
-    });
-    $('span[prompt-submit]').click( function(){ console.log('span'); $('div[prompt] center').animate({marginTop:'100vh'}, 100, ()=>{ $('div[prompt]').animate({opacity:0}, 150).removeAttr('active'); }); callback($('[prompt-response]').val()); return;});
-    $('span[prompt-cancel]').click( function(){ console.log('span'); $('div[prompt] center').animate({marginTop:'100vh'}, 100, ()=>{ $('div[prompt]').animate({opacity:0}, 150).removeAttr('active'); $('[prompt-response]').val(''); }); });
   },
 
+  confirm:function(message,onclick){
+    $('body').append(this.container(this.text(message) + this.button('okay', onclick) ));
+    var id = Modal.count; Modal.count++;
+    //Animate
+    $('#modal-'+id).animate( {opacity:'1'}, 100, function(){
+      $('#container-'+id).animate( {maxHeight:'80vh', maxWidth:'700px'}, 100);
+    });
+
+  },
+  prompt:function(header, message, onclick){
+    $('body').append(this.container(`<h2>${header}</h2>` + this.text(message) + `<input type="text" id="modal-response-${this.count}"></input>` + this.button('Submit', onclick+`($('#modal-response-${this.count}').val())` )));
+    var id = Modal.count; Modal.count++;
+    //Animate
+    $('#modal-'+id).animate( {opacity:'1'}, 100, function(){
+      $('#container-'+id).animate( {maxHeight:'80vh', maxWidth:'700px'}, 100);
+    });
+  },
+  options:function(header,message,label, method){
+    var list='';
+    for(i=0; i<method.length; i++){
+      list+=this.button(label[i], method[i]);
+    }
+    $('body').append(this.container(`<h2>${header}</h2>` + this.text(message) + list ));
+    var id = Modal.count; Modal.count++;
+    //Animate
+    $('#modal-'+id).animate( {opacity:'1'}, 100, function(){
+      $('#container-'+id).animate( {maxHeight:'80vh', maxWidth:'700px'}, 100);
+    });
+
+  },
+  slide: function(header){
+    var content = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
+    var temp = `<div class="modal" id="modal-${this.count}"><div class="slide-container" id="container-${this.count}"><div class="slide-header"><h3>${header}</h3><div class="slide-close" onclick="Modal.close(${this.count})">close</div></div><div class="slide-content">${content}</div></div></div>`;
+
+    $('body').append(temp);
+
+    var id = Modal.count; Modal.count++;
+    //Animate
+    $('#modal-'+id).animate( {opacity:'1'}, 100, function(){
+      $('#container-'+id).animate( {marginTop:'9vh'}, 100).animate( {marginTop:'10vh'}, 100);
+    });
+
+  },
+  close: function(id){
+    console.log('close: '+id);
+    $('#container-'+id).animate( {height:'0', width:'0'}, 100, function(){
+      $('#modal-'+id).animate( {opacity:'0'}, 100).remove();
+    });
+
+  },
 };

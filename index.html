@@ -71,13 +71,13 @@
     <header active>Home</header>
     <header>Buttons Example</header>
     <header>Modals Example</header>
-    <header>Page 4</header>
+    <header>Settings</header>
 
 
     <!-- Navigation Bar or alike -->
     <nav>
       <ul>
-        <!-- Menu Item--><li selected><span icon>&#10025;</span><span label>One</span></li><!-- Menu Item-->
+        <!-- Menu Item--><li selected><span icon><object data="resources/icons/1.svg" type="image/svg+xml" style="height:30px; width:30px; fill:var(--color);"></object></span><span label>One</span></li><!-- Menu Item-->
         <!-- Menu Item--><li><span icon>&#10025;</span><span label>Two</span></li><!-- Menu Item-->
         <!-- Menu Item--><li><span icon>&#10025;</span><span label>Three</span></li><!-- Menu Item-->
         <!-- Menu Item--><li><span icon>&#10025;</span><span label>Four</span></li><!-- Menu Item-->
@@ -125,19 +125,22 @@
           <header>Online Switch
             <label class="switch" onclick="toggleSwitchRequest('sample')" ><input id="sample" type="checkbox"><span class="slider"></span></label>
           </header>
-          <button onclick="Modal.alert('Hello World!')">Hello</button>
+          <button onclick="Modal.slide('Hello World!')">Hello</button>
         </article>
 
         <article>
           <header>Click here to open the modal
-            <button onclick="Modal.alert('Hello')">Click here!</button>
+            <button onclick="Modal.alert('Hello')">Alert!</button>
           </header>
-          <button onclick="Modal.slider()">Hello</button>
+          <button onclick="Modal.options('Choose', 'labels here', ['One','Two','Three','Four'],['alert(\'option1\')','alert(\'option2\')','alert(\'option2\')','alert(\'option2\')'])">tooltip</button>
         </article>
 
         <article>
           <header>Prompt Modal
-            <button onclick="Modal.prompt('Hello', function(mes){alert(mes);})">Click here!</button>
+            <button onclick="Modal.prompt('Hello', 'click to alert','alert')">Prompt</button>
+          </header>
+          <header>Confirm Modal
+            <button onclick="Modal.confirm('Are you sure?', 'alert(\'Hello\')' )">Confirm</button>
           </header>
         </article>
 
@@ -151,11 +154,11 @@
           <div style="display:flex;"><img id="stream" style="width:640px; height:480px;"></div>
           <script>
 
-            const img = document.querySelector('stream');
+            const img = document.querySelector('#stream');
             const WS_URL = 'ws://0.tcp.jp.ngrok.io:13864';
             const ws = new WebSocket(WS_URL);
             ws.onerror = function() {
-               location.reload(true);
+              //Do nothing
             }
             let urlObject;
             ws.onmessage = message => {
@@ -164,47 +167,57 @@
                     URL.revokeObjectURL(urlObject);
                 }
                 urlObject = URL.createObjectURL(new Blob([arrayBuffer]));
-                delete arrayBuffer;                delete message;                img.src = urlObject;
+                delete arrayBuffer;
+                 delete message;
+                 img.src = urlObject;
             }
 
           </script>
         </article>
+        <article>
+          <iframe src="http://www.example.com"></iframe>
+        </article>
+        <footer></footer>
+      </section>
+
+
+
+      <!-- Tab 4 Settings -->
+      <section>
+
+        <article>
+          <header>Display</header>
+
+          <lu>
+              <li>Theme: <input type="color" value="#ffffff"> </li>
+              <li>Show Graph <label class="switch" ><input id="sample" type="checkbox"><span class="slider"></span></label></li>
+              <li>
+                <input type="radio" style="background-color:red;">
+              </li>
+              <li></li>
+          </lu>
+
+
+        </article>
+
+        <article>
+          <header>Click here to open the modal
+            <button onclick="Modal.alert('Hello')">Click here!</button>
+          </header>
+          <button onclick="Modal.confirm('Are you sure?', 'alert(x)')">Confirm</button>
+        </article>
+
+        <article>
+          <header>Prompt Modal
+            <button onclick="Modal.prompt('Hello', function(mes){alert(mes);})">Click here!</button>
+          </header>
+        </article>
+
         <footer></footer>
       </section>
     </main>
 
 
-    <div alert modal>
-      <center>
-        <article>Hello World!</article>
-        <em>Tap anywhere to continue...</em>
-      </center>
-
-    </div>
-
-
-    <div slider>
-      <header></header>
-      <section>
-        <header></header>
-        <h1>Hello World!</h1>
-        <h1>Slide me down to exit...</h1>
-      </section>
-      <div backdrop></div> <!-- Dynamic Background -->
-    </div>
-
-
-
-    <div prompt modal>
-      <center>
-        <article><p></p>
-          <input prompt-response type="text"></input>
-          <span prompt-submit>Submit</span>
-          <span prompt-cancel>Cancel</span>
-        </article>
-      </center>
-
-    </div>
 
 
   </body>
