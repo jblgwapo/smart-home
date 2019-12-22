@@ -1,29 +1,17 @@
 $(document).ready(function(){
+
+  // Tab Functionalities
   $('nav li').click(function(){
     var target = $(this).index();
-      // Disable All
-
       $('body > header').each(function(i){ if(i==target){ $(this).attr('active', ''); return; } $(this).removeAttr('active');});
       $('main section').each(function(i){if(i==target){ $(this).attr('active', ''); return; } $(this).removeAttr('active');});
       $('nav li').each(function(i){if(i==target){ $(this).attr('selected', ''); return; } $(this).removeAttr('selected');});
-      // Select One
-      //$('header section').eq(target).attr('active','');
-      //$('main section').eq(target).attr('active','');
-      //$('nav li').eq(target).attr('active','');
     });
 
-
-
-    var timeout = 2;
-    var sec=0;
-    var a= setInterval( function(){
-      sec++;
-      if(sec==timeout){ //$('div[alert]').attr('active',''); }
-      }
-    },1000
-  );
-
-
+  // Setup Infos
+  var data = JSON.parse(localStorage.getItem('credentials'));
+  if( data==null ){ Modal.slide('Let\'s Get Started.','User Name:<input type="text" id="_username"><br>Home Serial Key<input type="text" id="_home-serial"><br><button onclick="SmartHomeSetup()">Submit</button>', 'Modal.alert(\'Please Complete the details\')'); return;}
+    $('#username').val(data.username); $('#serial').val(data.serial);
 
 
 
@@ -44,6 +32,19 @@ graph('monthly');
 
 
 
+// Setup Functions
+function SmartHomeSetup(){
+  var username = $('#_username').val();
+  var serial = $('#_home-serial').val();
+  localStorage.setItem('credentials', JSON.stringify({username:username, serial:serial}));
+  location.reload();
+};
+
+
+
+
+
+//Graph Functions
 function graph(mode='today', chart){
   var chartTemplate = {
       chart: { height: 350, type: 'bar', },
@@ -80,6 +81,8 @@ function graph(mode='today', chart){
 
 
 
+
+//Appliance Functions
 function toggleSwitchRequest(target){
   event.preventDefault();
   if(!navigator.onLine) {console.log('Youre offline' + navigator.onLine); return;}
@@ -93,18 +96,27 @@ function toggleSwitchRequest(target){
   $(`#${target}`).prop('checked', Boolean(xmlHttp.responseText));
 }
 
-function interface_alert(alert){
-  $('.modal').html(`<div modal><div backdrop onclick="closeAlert()"></div><div alert>${alert}</div><span>Click anywhere to continue</span></div>`);
-}
-function closeAlert(){
-  $('.modal').html('');
-}
+
+// Settings Functions
+  function saveSettings(){
+    localStorage.setItem('settings',JSON.stringify({theme:$('#theme').val(), chartDivision:$('#chartDivision').val() }));
+  }
 
 
+  function colorPick(){
+    var color = $('#theme').val();
+    $('body').get(0).style.setProperty("--theme",`var(--${color})`);
+  };
+
+
+
+
+
+// Modals
 var Modal = {
   container:function(content, button='cancel', type='cancel'){ return `<div class="modal" id="modal-${this.count}"><div class="modal-container" id="container-${this.count}">${content} <button class="modal-${type}" onclick="Modal.close(${this.count})">${button}</button></div></div>`; },
   text:function(content){ return `<p class="modal-content">${content}</p>` },
-  button:function(label, callback){ return `<button class="modal-button" onclick="${callback}; Modal.close(${this.count})">${label}</button>`},
+  button:function(label, callback){ return `<button onclick="${callback}; Modal.close(${this.count})">${label}</button>`},
   count:0,
   alert:function(message){
     $('body').append(this.container(this.text(message), 'Okay', 'button'));
@@ -145,9 +157,9 @@ var Modal = {
     });
 
   },
-  slide: function(header){
-    var content = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
-    var temp = `<div class="modal" id="modal-${this.count}"><div class="slide-container" id="container-${this.count}"><div class="slide-header"><h3>${header}</h3><div class="slide-close" onclick="Modal.close(${this.count})">close</div></div><div class="slide-content">${content}</div></div></div>`;
+  slide: function(header, content, close='default'){
+    if (close=='default'){ close=`Modal.close(${this.count})`; }
+    var temp = `<div class="modal" id="modal-${this.count}"><div class="slide-container" id="container-${this.count}"><div class="slide-header"><h3>${header}</h3><div class="slide-close" onclick="${close}">close</div></div><div class="slide-content">${content}</div></div></div>`;
 
     $('body').append(temp);
 
