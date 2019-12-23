@@ -13,13 +13,11 @@ $(document).ready(function(){
   if( data==null ){ Modal.slide('Let\'s Get Started.','User Name:<input type="text" id="_username"><br>Home Serial Key<input type="text" id="_home-serial"><br><button onclick="SmartHomeSetup()">Submit</button>', 'Modal.alert(\'Please Complete the details\')'); return;}
     $('#username').val(data.username); $('#serial').val(data.serial);
 
+  Settings.init();
 
 
 console.log(navigator.onLine);
 // TEst
-graph('today');
-graph('weekly');
-graph('monthly');
 
 
 
@@ -43,41 +41,47 @@ function SmartHomeSetup(){
 
 
 
-
 //Graph Functions
-function graph(mode='today', chart){
-  var chartTemplate = {
+
+var Graph = {
+  data:{
+    am:[123,23,41,23,234,123,321,231,122,100,221,123],
+    pm:[222,111,123,321,213,333,211,321,312,312,123,111],
+  },
+
+  template: {
       chart: { height: 350, type: 'bar', },
       plotOptions: {
-          bar: { horizontal: false, columnWidth: '55%', endingShape: 'rounded'},
+          bar: { horizontal: false, columnWidth: '77%', endingShape: 'rounded'},
           },
       dataLabels: { enabled: false },
-      stroke: { show: true, width: 2, colors: ['transparent'] },
+      stroke: { curve:'smooth', show: true, width: 0.7, colors: ['black'] },
       series: [
-        { name: 'Refrigerator',   data: [44, 55, 57, 56, 61, 58, 63, 60, 66,] },
+        { name: 'Refrigerator',   data: [44, 55, 57, 56, 61, 58, 63, 60, 66] },
         { name: 'Lamp',           data: [76, 85, 101, 98, 87, 90, 91, 114, 94] },
         { name: 'Aircon',         data: [35, 41, 36, 26, 45, 48, 52, 53, 41]}
       ],
       xaxis: { categories: ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],},
-      yaxis: {},
-      fill: {opacity: 1 },
-      tooltip: { y: { formatter: function (val) { return "" + val + " kW"}}}
-  }
+      //yaxis: {},
+      //fill: {opacity: 1 },
+      //tooltip: { y: { formatter: function (val) { return "" + val + " kW"}}}
+  },
+  renderHome: function(){
+    //Today
+    this.template.xaxis.categories = ['1:00','2:00','3:00','4:00','5:00','6:00','7:00','8:00','9:00','10:00','11:00','12:00'];
+    this.template.series = [{ name:'am', data:this.data.am },{ name:'pm', data:this.data.pm } ];
+    Graph.today = new ApexCharts( document.querySelector('#todayCharts'), this.template).render();
 
 
-  switch (mode) {
-    case 'today': chartTemplate.xaxis.categories = ['1pm','2pm','3pm','4pm','5pm','6pm','7pm','8pm'];  break;
-    case 'weekly': chartTemplate.xaxis.categories = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu','Fri','Sat'];  break;
-    case 'monthly': chartTemplate.xaxis.categories = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];  break;
-    default:
-  }
-  new ApexCharts( document.querySelector(`#${mode}Charts`), chartTemplate ).render();
+    this.template.xaxis.categories = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu','Fri','Sat'];
+    this.template.xaxis.categories = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+  },
+  today:{},
+  weekly:{},
+  monthly:{},
 
 
-}
-
-
-
+};
 
 
 
@@ -97,16 +101,49 @@ function toggleSwitchRequest(target){
 }
 
 
+
+
 // Settings Functions
-  function saveSettings(){
-    localStorage.setItem('settings',JSON.stringify({theme:$('#theme').val(), chartDivision:$('#chartDivision').val() }));
-  }
+var Settings = {
+  init: function(){
+    var settings = JSON.parse(localStorage.getItem('settings'));
+    if (settings==null){ this.save(); settings=JSON.parse(localStorage.getItem('settings')); };
+    this.data = settings;
+    this.exec();
+    $('.settings').on('change', function(event){
+    event.stopPropagation(); event.stopImmediatePropagation();
+    Settings.save();
+    });
+  },data:{},
+  save: function(){
+    this.data = {
+      theme:$('#theme').val(),
+      chartType:$('#chartType').val(),
+      chartRender:$('#chartRender').val(),
+    }
+    localStorage.setItem('settings',JSON.stringify(this.data));
+    Settings.exec();
+  },
+  exec: function(){
+      Object.values(this.methods).map(value => { value.call(); });
+  },
+  methods: {
+    colorPick:function(){
+      $('body').get(0).style.setProperty("--theme",`var(--${Settings.data.theme})`);
+    },
+    graphMode: function(){
+      console.log(Settings.data.chartRender);
+      Graph.template.chart.type=Settings.data.chartType;
+
+      Graph.renderHome();
+    }
+
+  }, //End of methods
+
+};
 
 
-  function colorPick(){
-    var color = $('#theme').val();
-    $('body').get(0).style.setProperty("--theme",`var(--${color})`);
-  };
+
 
 
 
@@ -158,7 +195,7 @@ var Modal = {
 
   },
   slide: function(header, content, close='default'){
-    if (close=='default'){ close=`Modal.close(${this.count})`; }
+    if (close=='default'){ close=`Modal.slideOut(${this.count})`; }
     var temp = `<div class="modal" id="modal-${this.count}"><div class="slide-container" id="container-${this.count}"><div class="slide-header"><h3>${header}</h3><div class="slide-close" onclick="${close}">close</div></div><div class="slide-content">${content}</div></div></div>`;
 
     $('body').append(temp);
@@ -177,4 +214,9 @@ var Modal = {
     });
 
   },
+  slideOut: function(id){
+    $('#container-'+id).animate( {marginTop:'9vh'}, 100).animate( {marginTop:'100vh'}, 150, function(){
+      $('#modal-'+id).animate( {opacity:'0'}, 100).remove();
+    });
+  }
 };

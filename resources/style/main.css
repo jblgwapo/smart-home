@@ -12,42 +12,31 @@ z-index
 
 /* Dark Mode */
 :root{
-  --background-translucent:rgba(0,60,150,0.1);
-  --theme:rgb(250,250,250); --disabled:rgb(170,170,170);
-  --token: #fcfcfc;/*linear-gradient(#fcfcfc,#fafafa);*/
-  --line-color: #cccccc;
+  --blue:rgb(5,120,250);
+  --purple:rgb(150,60,150);
+  --pink:rgb(245,80,155);
+  --red:rgb(220,50,60);
+  --orange:rgb(245,130,40);
+  --yellow:rgb(250,180,55);
+  --green:rgb(100,185,80);
+  --graphite:rgb(150,150,150);
 
+
+  --background: #f0f0f0;
+  --color: #3d3d3d;
+  --theme:rgb(9,143,248);
+  --disabled:rgb(70,70,70);
+  --token: #fefefe;/*linear-gradient(#fcfcfc,#f7f7f7);*/
+  --line-color: #ffffff;
+
+
+  /* Modal */
+  --backdrop: rgba(255,255,255,0.5);
 
 
 }
 
-body>header, nav { color:white !important;}
-      @media (prefers-color-scheme: light) {
-            :root{
-              --blue:rgb(5,120,250);
-              --purple:rgb(150,60,150);
-              --pink:rgb(245,80,155);
-              --red:rgb(220,50,60);
-              --orange:rgb(245,130,40);
-              --yellow:rgb(250,180,55);
-              --green:rgb(100,185,80);
-              --graphite:rgb(150,150,150);
 
-
-              --background: #f0f0f0;
-              --color: #3d3d3d;
-              --theme:rgb(9,143,248);
-              --disabled:rgb(70,70,70);
-              --token: #fefefe;/*linear-gradient(#fcfcfc,#f7f7f7);*/
-              --line-color: #ffffff;
-
-
-              /* Modal */
-              --backdrop: rgba(255,255,255,0.5);
-            }
-            body > header { background: linear-gradient(rgb(255,255,255,1), rgba(255,255,255,0)) !important; border-bottom:1.5px solid #f0f0f0;}
-            body > nav { background: rgba(255,255,255,0.7) !important; border-top: 1px solid #f3f3f3; }
-      }
       @media (prefers-color-scheme: dark) {
             :root{
               --blue:rgb(5,120,250);
@@ -55,7 +44,7 @@ body>header, nav { color:white !important;}
               --pink:rgb(245,80,155);
               --red:rgb(250,80,80);
               --orange:rgb(245,130,40);
-              --yellow:rgb(250,180,55);
+              --yellow:rgb(230,160,35);
               --green:rgb(100,185,80);
               --graphite:rgb(140,140,140);
 
@@ -72,9 +61,10 @@ body>header, nav { color:white !important;}
               --backdrop: rgba(0,0,0,0.5);
             }
 
-            body > header { background: linear-gradient(rgb(0,0,0,1), rgba(30,30,30,0.3)) !important; border-bottom: 1px solid #0f0f0f;}
+            body > header { background: linear-gradient(rgb(0,0,0,1), rgba(30,30,30,0.3)) !important; border-bottom: 1px solid #0f0f0f !important;}
             body > nav { background: rgb(30,30,30,0.7) !important; border-top: 1px solid #0f0f0f; }
-            [graph]{ filter: invert(); }
+            [graph]{ filter: invert(); color:black;}
+
       }
 
 
@@ -92,7 +82,7 @@ body { top:0; left: 0; right: 0; bottom: 0;
        -webkit-user-select: none;
        -webkit-tap-highlight-color: transparent;
        -webkit-touch-callout: none;
-       scroll-snap-type: y proximity; /* set to mandatory to force scroll in contrary to proximity*/
+       /*scroll-snap-type: y proximity; /* set to mandatory to force scroll in contrary to proximity*/
        scroll-behavior: smooth;
        scroll-padding: 3.7em; scroll-snap-padding: 3.7em;
       } body::-webkit-scrollbar { width: 0 !important; background: transparent;}
@@ -103,25 +93,26 @@ body { top:0; left: 0; right: 0; bottom: 0;
 /* Put backgrounds cursors and paddings here */
 body> header {  top:0; left:0; right:0; display: none; position: fixed;
                 padding-bottom: 0.1em; color:inherit !important;
-                background: var(--background-translucent);
+                background: linear-gradient(rgb(255,255,255,1), rgba(255,255,255,0));
+                border-bottom:1.5px solid #f0f0f0;
                 font-weight: bold;
                 -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
                 z-index: 100;
               }
 
 nav { position: fixed;
-
+      background: rgba(255,255,255,0.7); border-top: 1px solid #f3f3f3;
       -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
       z-index: 100;
     }
-      nav > lu { display: inline-block;
+      nav > lu { display: flex;
                  margin: auto;
                  list-style-type: none;
 
                }
-               nav li { cursor: pointer;  font-size: 77%; color:var(--disabled) !important;}
+               nav li { cursor: pointer;  font-size: 60%; color:var(--disabled) !important; width: 100%;}
                       nav li[selected]{ color:var(--theme) !important; }
-                      nav svg{ fill:currentColor; height: 30px; width: 30px;}
+                      nav svg{ fill:currentColor; height: 20px; width: 20px;}
 
 main { height: 100vh; width: 100%;
        margin: 4em auto;
@@ -162,7 +153,8 @@ article input,select {
   width: 100%; display: block;
   margin:10px auto; padding: 0.2em;
   border-radius: 0.5em; border: 1px solid var(--theme);
-  font-size: 1em;
+  font-size: 1em; background: var(--background); color: inherit;
+  -webkit-appearance:none;
 }
 
 
@@ -184,7 +176,7 @@ article input,select {
        padding-bottom: 3vh; padding-top: 0.3em;
        width: 100vw; text-align: center;
       }
-      nav li { width:20%; min-width:10%; max-width:7em;
+      nav li {  min-width:15%; max-width:7em;
                padding:0.3%; display:inline-block;
                text-align: center;
               }
@@ -203,7 +195,8 @@ article input,select {
         section[active] { max-width: 100%; display: flex; align-items: flex-start; flex-grow: 1; flex-wrap: wrap;}
                 article{ margin: 3px; max-width: 49%; padding: 1%; display: inline-block; flex: shrink; }
   nav { padding-bottom: 0.3em; }
-      nav li span{ display: inline-block; padding: 3px;}
+      nav li { width: 10%;}
+      nav li span{ display: inline-block; padding: 3px; vertical-align: middle;}
 }
 /* Desktops */
 @media screen and (min-width:1200px) {
@@ -277,43 +270,6 @@ input:checked + .slider:before {
   -ms-transform: translateX(1em);
   transform: translateX(1em);
 }
-
-/*
-GUI Modals / Necessities
-Childrens are indented with three \t relative to it's parent
-Keep this message long to maintain readability among different parts of the code
-
-Creator: John Brell G. Ladiero
-Copyright 2019-2020
-*/
-
- /* Graphs */
- div[graph]{
-   width: 100%; height: 300px;
-   position: relative;
-   display: flex; color:black;
-   background: rgba(0,0,0,0);
-
-
- }
-       div[column]{
-
-         bottom:0; right: 0; left:0; height:100%; width: 98%;
-         position: relative; display: flex; flex-direction: row; align-items: flex-end; justify-content: center;
-         margin-left: 1px; margin-right:1px;
-       }
-
-       div[column-fill]{
-         margin-left:1%; margin-right:1%; width:98%; height:1%;  display: block;
-         background: linear-gradient(rgb(0,30,150), rgb(0,30,100));
-       }
-       div[label]{bottom: 0; left:0; right: 0; min-width: 100%; height: 15px; display: flex; position: absolute; float: center; align-items: flex-end;}
-       div[column-label]{
-         bottom:0; left:0; right:0; position: absolute;
-         font-size: 12px; text-align: center;
-
-
-       }
 
 
 
