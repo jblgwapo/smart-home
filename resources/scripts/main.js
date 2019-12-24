@@ -3,10 +3,12 @@ $(document).ready(function(){
   // Tab Functionalities
   $('nav li').click(function(){
     var target = $(this).index();
+      localStorage.setItem('tab', target);
       $('body > header').each(function(i){ if(i==target){ $(this).attr('active', ''); return; } $(this).removeAttr('active');});
       $('main section').each(function(i){if(i==target){ $(this).attr('active', ''); return; } $(this).removeAttr('active');});
       $('nav li').each(function(i){if(i==target){ $(this).attr('selected', ''); return; } $(this).removeAttr('selected');});
     });
+    $('nav li').eq(Number(localStorage.getItem('tab'))).trigger('click');
 
   // Setup Infos
   var data = JSON.parse(localStorage.getItem('credentials'));
@@ -40,6 +42,31 @@ function SmartHomeSetup(){
 
 
 
+// All Data about the home. Format in here
+
+
+var Home = {
+  today:{
+    day:[321,13,123,13,123,123,123,123,321,321,123,231],
+    night:[23,32,32,12,321,32,321,23,313,123,222,312]
+  },
+  weekly:{},
+  lifetime:{
+
+
+
+  },
+
+  appliances:[{
+    name:'Refrigerator', /* User Defined */
+    status:'ON', /* Remote */
+    consumption:[13,123,3213,123,123,1232,1,1321,321], /* Power Consumption Data in watts */
+
+  }],
+
+
+}
+
 
 //Graph Functions
 
@@ -59,26 +86,33 @@ var Graph = {
       series: [
         { name: 'Refrigerator',   data: [44, 55, 57, 56, 61, 58, 63, 60, 66] },
         { name: 'Lamp',           data: [76, 85, 101, 98, 87, 90, 91, 114, 94] },
-        { name: 'Aircon',         data: [35, 41, 36, 26, 45, 48, 52, 53, 41]}
+        { name: 'Aircon',         data: [35, 41, 36, 26, 45, 48, 52, 53, 41] }
       ],
       xaxis: { categories: ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],},
       //yaxis: {},
       //fill: {opacity: 1 },
-      //tooltip: { y: { formatter: function (val) { return "" + val + " kW"}}}
+      tooltip: { y: { formatter: function (val) { return "" + val + " W"}}}
   },
   renderHome: function(){
     //Today
     this.template.xaxis.categories = ['1:00','2:00','3:00','4:00','5:00','6:00','7:00','8:00','9:00','10:00','11:00','12:00'];
     this.template.series = [{ name:'am', data:this.data.am },{ name:'pm', data:this.data.pm } ];
-    Graph.today = new ApexCharts( document.querySelector('#todayCharts'), this.template).render();
+    if(Graph.today!=0){ location.reload(); }
+    asd = this.data.am.concat(this.data.pm);
+    var total=0;
+    for(i=0;i<asd.length; i++){ total+=asd[i]; }
+    $('#todayTotal').html(`Total Power Consumption: ${total} Watts`);
+    Graph['today'] = new ApexCharts( document.querySelector('#todayCharts'), this.template);
+    Graph.today.render();
 
 
+    return;
     this.template.xaxis.categories = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu','Fri','Sat'];
     this.template.xaxis.categories = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
   },
-  today:{},
-  weekly:{},
-  monthly:{},
+  today:0,
+  weekly:0,
+  monthly:0,
 
 
 };
@@ -106,14 +140,16 @@ function toggleSwitchRequest(target){
 // Settings Functions
 var Settings = {
   init: function(){
+    // Pull
     var settings = JSON.parse(localStorage.getItem('settings'));
     if (settings==null){ this.save(); settings=JSON.parse(localStorage.getItem('settings')); };
     this.data = settings;
-    this.exec();
-    $('.settings').on('change', function(event){
-    event.stopPropagation(); event.stopImmediatePropagation();
-    Settings.save();
-    });
+    //Restore Settings
+    Object.keys(settings).map(val =>{ $(`#${val}`).val(settings[val]);});
+    // Listen
+    $('.settings').on('change', function(event){ event.stopPropagation(); event.stopImmediatePropagation(); Settings.save(); });
+    // Initialize
+    Settings.exec();
   },data:{},
   save: function(){
     this.data = {
@@ -121,6 +157,7 @@ var Settings = {
       chartType:$('#chartType').val(),
       chartRender:$('#chartRender').val(),
     }
+    console.log(this.data);
     localStorage.setItem('settings',JSON.stringify(this.data));
     Settings.exec();
   },
@@ -129,12 +166,11 @@ var Settings = {
   },
   methods: {
     colorPick:function(){
-      $('body').get(0).style.setProperty("--theme",`var(--${Settings.data.theme})`);
+      $('body').get(0).style.setProperty("--accent",`var(--${Settings.data.theme})`);
     },
     graphMode: function(){
-      console.log(Settings.data.chartRender);
+      console.log(Settings.data.chartType);
       Graph.template.chart.type=Settings.data.chartType;
-
       Graph.renderHome();
     }
 

@@ -78,7 +78,7 @@
     <nav>
       <ul>
         <!-- Menu Item-->
-        <li selected>
+        <li>
           <span icon>
             <svg  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="400" height="416.3265306122449" viewBox="0, 0, 400,416.3265306122449"><style>path{f fill:gold; ill:inherit;}</style><g id="svgg"><path id="path0" d="M94.865 99.011 C -3.633 197.577,-6.128 200.983,9.447 215.615 C 26.160 231.317,31.316 227.792,117.310 141.874 L 200.000 59.258 283.241 142.425 C 358.163 217.280,367.533 225.328,377.001 222.952 C 389.508 219.813,397.485 206.765,394.383 194.518 C 390.538 179.338,211.429 4.082,199.760 4.082 C 192.116 4.082,167.173 26.655,94.865 99.011 M127.474 135.790 L 57.143 206.208 57.143 309.226 L 57.143 412.245 104.082 412.245 L 151.020 412.245 151.020 334.593 L 151.020 256.941 161.490 252.960 C 175.020 247.816,224.980 247.816,238.510 252.960 L 248.980 256.941 248.980 334.593 L 248.980 412.245 295.918 412.245 L 342.857 412.245 342.857 309.117 L 342.857 205.989 296.939 161.129 C 271.684 136.456,239.047 104.817,224.413 90.820 L 197.806 65.372 127.474 135.790 " stroke="none" fill="currentColor" fill-rule="evenodd"></path></g></svg>
           </span>
@@ -114,14 +114,13 @@
 
 
       <!-- Seections are the page itself -->
-      <section active>
+      <section>
         <article>
           <header>Today
             <label class="switch"><input type="checkbox"><span class="slider"></span></label>
           </header>
           <div graph id="todayCharts"></div>
-          <a href="">Refresh</a><br><button onclick="$('#todayCharts').html(null); Graph.renderHome(); ">ASD</button>
-          <p id="todayTotal">The quick brown fox jumps over the lazy dog. :)</p>
+          <p id="todayTotal"></p>
         </article>
 
         <article>
@@ -132,8 +131,8 @@
         </article>
 
         <article>
-          <header>This Month</header>
-          <div graph id="monthlyCharts"></div>
+          <header>Lifetime</header>
+          <div graph id="lifetimeCharts"></div>
 
           Currently on a major overhaul. 😇
         </article>
@@ -240,7 +239,7 @@
               </select>
             </li>
             <li>Render Graphs as:
-              <select class="settings" id="chartRender" onchange="Settings.save()">
+              <select class="settings" id="chartRender" onchange="Settings.save();">
                 <option value="whole">Whole Day</option>
                 <option value="half">Day and Night</option>
               </select>
@@ -277,9 +276,25 @@
         </article>
 
         <article>
-          <header>Prompt Modal
-            <button onclick="Modal.prompt('Hello', function(mes){alert(mes);})">Click here!</button>
-          </header>
+          <header>About</header>
+          <p>
+            This app was created as a partial fullfilment for B.S. Electronics and Communications Engineering.<br><br>
+            Written by:<br>
+            John Brell G. Ladiero<br>
+            Aldrin John O. Manalansan<br>
+            Romiel G. Sambat<br>
+            Remz Anne P. Tolentino<br>
+          </p><br>
+          <p>
+            Dependencies used: <br>
+            jQuery<br>
+            ApexCharts
+          </p><br>
+          <p>
+            Application: SmartHome<br>
+            Build: 3000<br>
+            Current Lines of code: 20476
+          </p>
         </article>
 
         <footer></footer>
