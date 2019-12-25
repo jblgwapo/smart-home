@@ -12,14 +12,14 @@ z-index
 
 /* Dark Mode */
 :root{
-  --blue:rgb(5,120,250);
-  --purple:rgb(150,60,150);
-  --pink:rgb(245,80,155);
-  --red:rgb(220,50,60);
-  --orange:rgb(245,130,40);
-  --yellow:rgb(250,180,55);
-  --green:rgb(100,185,80);
-  --graphite:rgb(150,150,150);
+  --blue:#098ff8;
+  --purple:#963c96;
+  --pink:#f5509b;
+  --red:#dc323c;
+  --orange:#f58228;
+  --yellow:#fab437;
+  --green:#64b950;
+  --graphite:#969696;
 
 
   --background: #f0f0f0;
@@ -39,14 +39,14 @@ z-index
 
       @media (prefers-color-scheme: dark) {
             :root{
-              --blue:rgb(5,120,250);
-              --purple:rgb(165,80,165);
-              --pink:rgb(245,80,155);
-              --red:rgb(250,80,80);
-              --orange:rgb(245,130,40);
-              --yellow:rgb(230,160,35);
-              --green:rgb(100,185,80);
-              --graphite:rgb(140,140,140);
+
+              --purple:#a550a5;
+
+              --red:#fa4650;
+
+              --yellow:#e6a023;
+
+              --graphite:#8c8c8c;
 
 
               --background: #000000;
@@ -63,7 +63,8 @@ z-index
 
             body > header { background: linear-gradient(rgb(0,0,0,1), rgba(30,30,30,0.3)) !important; border-bottom: 1px solid #0f0f0f !important;}
             body > nav { background: rgb(30,30,30,0.77) !important; border-top: 1px solid #0f0f0f; }
-            [graph]{ filter: invert(); color:black;}
+            [graph]{ filter: invert() hue-rotate(170deg); color:black;}
+
 
       }
 
@@ -135,7 +136,7 @@ main { height: 100vh; width: 100%;
                                                           font-size: 0.707em;
                                                         }
                       article lu {  border-top:1px solid  var(--line-color); list-style-type: none;}
-                                  article li { padding-top: 0.5em; padding-bottom: 0.5em; font-size:110%; border-bottom: 1px solid rgba(100,100,100,0.17);  position: relative;  }
+                                  article li { padding-top: 0.3em; padding-bottom: 0.3em; font-size:110%; border-bottom: 1px solid rgba(100,100,100,0.17);  position: relative;  }
 
 
 
@@ -277,7 +278,6 @@ img[stream]{width: 100%; height: auto; border: none;}
 
 
 
-
 /*
 GUI Modals / Necessities
 Childrens are indented with three \t relative to it's parent
@@ -294,7 +294,6 @@ Copyright 2019-2020
        z-index: 700;
      }
 .modal-container {
-
   width: 90vw; height:auto; max-width: 0; max-height: 0; overflow-x: hidden;
   margin: 10vh auto; padding: 1em;
   border-radius: 1em; border: 1px solid var(--background);

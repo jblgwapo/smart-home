@@ -57,12 +57,14 @@
     <script src="app.js"></script>
     <link rel="manifest" href="manifest.json">
     <!-- Relative Script Paths -->
+    <script src="resources/scripts/apexcharts.min.js"></script>
     <script src="resources/scripts/engine.js"></script>
     <script src="resources/scripts/main.js"></script>
     <!-- Style-->
+
     <link id="style" rel="stylesheet" type="text/css" href="resources/style/main.css">
     <link id="style" rel="stylesheet" type="text/css" href="resources/style/apexcharts.css">
-    <script src="resources/scripts/apexcharts.min.js" defer></script>
+
     <!-- Title -->
     <title>Smart Home (Thesis)</title>
   </head>
@@ -131,10 +133,9 @@
         </article>
 
         <article>
-          <header>Lifetime</header>
-          <div graph id="lifetimeCharts"></div>
+          <header>This Month</header>
+          <div graph id="monthlyCharts"></div>
 
-          Currently on a major overhaul. 😇
         </article>
 
         <footer></footer>
@@ -252,8 +253,8 @@
               </select>
             </li>
             <li>
-              <button onclick="Modal.confirm('Are you sure you want to refresh the data?<br><em>You will be redirected to home tab</em>', 'location.reload()')">Reload Data</button>
-
+              Currency:
+              <input type="number" value="9.96">
             </li>
           </lu>
 
@@ -282,7 +283,7 @@
             Written by:<br>
             John Brell G. Ladiero<br>
             Aldrin John O. Manalansan<br>
-            Romiel G. Sambat<br>
+            Romiel Jan G. Sambat<br>
             Remz Anne P. Tolentino<br>
           </p><br>
           <p>

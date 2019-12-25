@@ -1,27 +1,41 @@
 $(document).ready(function(){
 
-  // Tab Functionalities
-  $('nav li').click(function(){
-    var target = $(this).index();
-      localStorage.setItem('tab', target);
-      $('body > header').each(function(i){ if(i==target){ $(this).attr('active', ''); return; } $(this).removeAttr('active');});
-      $('main section').each(function(i){if(i==target){ $(this).attr('active', ''); return; } $(this).removeAttr('active');});
-      $('nav li').each(function(i){if(i==target){ $(this).attr('selected', ''); return; } $(this).removeAttr('selected');});
-    });
-    $('nav li').eq(Number(localStorage.getItem('tab'))).trigger('click');
+
 
   // Setup Infos
   var data = JSON.parse(localStorage.getItem('credentials'));
   if( data==null ){ Modal.slide('Let\'s Get Started.','User Name:<input type="text" id="_username"><br>Home Serial Key<input type="text" id="_home-serial"><br><button onclick="SmartHomeSetup()">Submit</button>', 'Modal.alert(\'Please Complete the details\')'); return;}
     $('#username').val(data.username); $('#serial').val(data.serial);
 
-  Settings.init();
+System.init();
+  // Graphs
+  var today = new ApexCharts(
+    document.querySelector('#todayCharts'),
+    options([{name:'Today',data:[123,123,123,123,432,123,321,432,123,234,123,412,0,0,0,0,0,0,0,0,0,0,0,0]},{name:'Yesterday',data:[0,0,0,0,0,0,0,0,0,0,0,0,123,123,123,123,432,123,321,432,123,234,123,412]}], 'today')
+  );
+
+  var weekly = new ApexCharts(
+    document.querySelector('#weeklyCharts'),
+    options([{name:'Power Consumption',data:[123,123,123,321,321,123,321]}], 'weekly')
+  );
+
+  var monthly = new ApexCharts(
+    document.querySelector('#monthlyCharts'),
+    options([{name:'Power Consumption',data:[123,123,123,321,321,321,31,23,123,213,12,32,12,32,12,322,12,312,3,12,3,213,122,3,213,12,123,12,21,31,21]}], 'monthly')
+  );
 
 
-console.log(navigator.onLine);
+today.render();
+weekly.render();
+monthly.render();
+
+
+
+
+
 // TEst
 
-
+console.log(navigator.onLine);
 
 
 
@@ -29,6 +43,14 @@ console.log(navigator.onLine);
 
 // test end
 });
+
+
+
+
+
+
+
+
 
 
 
@@ -68,54 +90,14 @@ var Home = {
 }
 
 
-//Graph Functions
-
-var Graph = {
-  data:{
-    am:[123,23,41,23,234,123,321,231,122,100,221,123],
-    pm:[222,111,123,321,213,333,211,321,312,312,123,111],
-  },
-
-  template: {
-      chart: { height: 350, type: 'bar', },
-      plotOptions: {
-          bar: { horizontal: false, columnWidth: '77%', endingShape: 'rounded'},
-          },
-      dataLabels: { enabled: false },
-      stroke: { curve:'smooth', show: true, width: 0.7, colors: ['black'] },
-      series: [
-        { name: 'Refrigerator',   data: [44, 55, 57, 56, 61, 58, 63, 60, 66] },
-        { name: 'Lamp',           data: [76, 85, 101, 98, 87, 90, 91, 114, 94] },
-        { name: 'Aircon',         data: [35, 41, 36, 26, 45, 48, 52, 53, 41] }
-      ],
-      xaxis: { categories: ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],},
-      //yaxis: {},
-      //fill: {opacity: 1 },
-      tooltip: { y: { formatter: function (val) { return "" + val + " W"}}}
-  },
-  renderHome: function(){
-    //Today
-    this.template.xaxis.categories = ['1:00','2:00','3:00','4:00','5:00','6:00','7:00','8:00','9:00','10:00','11:00','12:00'];
-    this.template.series = [{ name:'am', data:this.data.am },{ name:'pm', data:this.data.pm } ];
-    if(Graph.today!=0){ location.reload(); }
-    asd = this.data.am.concat(this.data.pm);
-    var total=0;
-    for(i=0;i<asd.length; i++){ total+=asd[i]; }
-    $('#todayTotal').html(`Total Power Consumption: ${total} Watts`);
-    Graph['today'] = new ApexCharts( document.querySelector('#todayCharts'), this.template);
-    Graph.today.render();
 
 
-    return;
-    this.template.xaxis.categories = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu','Fri','Sat'];
-    this.template.xaxis.categories = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-  },
-  today:0,
-  weekly:0,
-  monthly:0,
 
 
-};
+//Function to convert rgb color to hex format
+
+
+
 
 
 
@@ -134,22 +116,79 @@ function toggleSwitchRequest(target){
   $(`#${target}`).prop('checked', Boolean(xmlHttp.responseText));
 }
 
+var options= function(series, type){
+  var template = {
+      chart: { height: 350, type: System.data.chartType, },
+      plotOptions: {
+          bar: { horizontal: false, columnWidth: '77%', endingShape: 'rounded'},
+          },
+      dataLabels: { enabled: false },
+      stroke: { curve:'smooth', show: true, width: 0.7, colors: ['black'] },
+      series: series,
+      xaxis: { categories: [], labels:{show:true}},
+      //yaxis: {},
+      fill:{ colors: [ ()=> { var hexDigits = new Array ("0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"); rgb = $('li[selected]').css('color'); rgb = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/); hex='#'; for(i=1;i<=3;i++){ hex+=isNaN(rgb[i]) ? "00" : hexDigits[(rgb[i] - rgb[i] % 16) / 16] + hexDigits[rgb[i] % 16];} return hex;}, '#777']},
+      tooltip: { y: { formatter: function (val) { return "" + val + "W"}}}
+  }
+
+    switch (type) {
+      case 'monthly':
+        var month = ['Jan ','Feb ','Mar ','Apr ','May ','Jun ','Jul ','Aug ','Sep ','Oct ','Nov ','Dec '];
+        date = new Date;
+        days = [];
+        date.setDate(date.getDate() - 30);
+        for (var i = 30; i >0; i--) {
+          days.push(month[date.getMonth()]+date.getDate());
+          date.setDate(date.getDate() + 1);
+        }
+        days.push('Today');
+        template.xaxis.categories = days;
+        template.xaxis.labels.show = false;
+        break;
+      case 'weekly':
+        template.xaxis.categories = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        break;
+      case 'today':
+        template.xaxis.categories = ['1:00 AM','2:00 AM','3:00 AM','4:00 AM','5:00 AM','6:00 AM','7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 NN','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM','7:00 PM','8:00 PM','9:00 PM','10:00 PM','11:00 PM','12:00 AM', ];
+        template.xaxis.labels.show = false;
+      default:
+    }
+    return template;
+
+}
 
 
+
+//    *******
+//    *     *
+//    *     *
+//    *     *
+//    *     *
+//    *     *
+//    ******* B J E C T S
 
 // Settings Functions
-var Settings = {
+var System = {
   init: function(){
+    // Tab Functionalities
+    $('nav li').click(function(){
+      var target = $(this).index();
+        localStorage.setItem('tab', target);
+        $('body > header').each(function(i){ if(i==target){ $(this).attr('active', ''); return; } $(this).removeAttr('active');});
+        $('main section').each(function(i){if(i==target){ $(this).attr('active', ''); return; } $(this).removeAttr('active');});
+        $('nav li').each(function(i){if(i==target){ $(this).attr('selected', ''); return; } $(this).removeAttr('selected');});
+      });
+      $('nav li').eq(Number(localStorage.getItem('tab'))).trigger('click');
     // Pull
     var settings = JSON.parse(localStorage.getItem('settings'));
     if (settings==null){ this.save(); settings=JSON.parse(localStorage.getItem('settings')); };
-    this.data = settings;
+    System.data = settings;
     //Restore Settings
     Object.keys(settings).map(val =>{ $(`#${val}`).val(settings[val]);});
     // Listen
-    $('.settings').on('change', function(event){ event.stopPropagation(); event.stopImmediatePropagation(); Settings.save(); });
+    $('.settings').on('change', function(event){ event.stopPropagation(); event.stopImmediatePropagation(); System.save(); });
     // Initialize
-    Settings.exec();
+    System.exec();
   },data:{},
   save: function(){
     this.data = {
@@ -159,29 +198,23 @@ var Settings = {
     }
     console.log(this.data);
     localStorage.setItem('settings',JSON.stringify(this.data));
-    Settings.exec();
+    System.exec();
   },
   exec: function(){
       Object.values(this.methods).map(value => { value.call(); });
   },
   methods: {
     colorPick:function(){
-      $('body').get(0).style.setProperty("--accent",`var(--${Settings.data.theme})`);
+      $('body').get(0).style.setProperty("--accent",`var(--${System.data.theme})`);
     },
     graphMode: function(){
-      console.log(Settings.data.chartType);
-      Graph.template.chart.type=Settings.data.chartType;
-      Graph.renderHome();
+      if($('#todayCharts').html().trim()=='') return;
+      location.reload();
     }
 
   }, //End of methods
 
 };
-
-
-
-
-
 
 
 
