@@ -8,34 +8,14 @@ console.log(atob(''));
     $('#username').val(data.username); $('#serial').val(data.serial);
 
 System.init();
+Appliance.init();
   // Graphs
-  Home['today'] = new ApexCharts(
-    document.querySelector('#todayCharts'),
-    options([{name:'Today',data:[123,123,123,123,432,123,321,432,123,234,123,412,0,0,0,0,0,0,0,0,0,0,0,0]},{name:'Yesterday',data:[0,0,0,0,0,0,0,0,0,0,0,0,123,123,123,123,432,123,321,432,123,234,123,412]}], 'today')
-  );
-
-  Home['weekly'] = new ApexCharts(
-    document.querySelector('#weeklyCharts'),
-    options([{name:'Power Consumption',data:[123,123,123,321,321,123,321]}], 'weekly')
-  );
-
-  Home['monthly'] = new ApexCharts(
-    document.querySelector('#monthlyCharts'),
-    options([{name:'Power Consumption',data:[123,123,123,321,321,321,31,23,123,213,12,32,12,32,12,322,12,312,3,12,3,213,122,3,213,12,123,12,21,31,21]}], 'monthly')
-  );
+Charts.init();
 
 
-Home['today'].render();
-Home['weekly'].render();
-Home['monthly'].render();
 
-setTimeout(
-  ()=>{
-Home['weekly'].updateOptions(
-  options([{name:'Power Consumption',data:[321,231,123,23,123,231,123]}], 'weekly')
-)},
-3000
-);
+
+console.log(Appliance.dataTotal());
 
 
 // TEst
@@ -53,7 +33,26 @@ console.log(navigator.onLine);
 
 
 
-
+var Time = {
+  log: function(index=0){
+    date = new Date;
+    date.setDate(date.getDate() + index);
+    return 'log'+Number(date.getMonth()+1)+date.getDate()+Number(1900+date.getYear());
+  },
+  date: function(index=0){
+    date = new Date;
+    date.setDate(date.getDate() + index);
+    return this.months[date.getMonth()]+date.getDate();
+  },
+  range: function(start, end){
+    var arr=[];
+    for(i=start; i<end; i++) {arr.push(this.date(i))};
+    return arr;
+  },
+  months:['Jan ','Feb ','Mar ','Apr ','May ','Jun ','Jul ','Aug ','Sep ','Oct ','Nov ','Dec '],
+  days:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+  hours: ['1:00 AM','2:00 AM','3:00 AM','4:00 AM','5:00 AM','6:00 AM','7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 NN','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM','7:00 PM','8:00 PM','9:00 PM','10:00 PM','11:00 PM','12:00 AM' ],
+}
 
 
 
@@ -73,32 +72,54 @@ function SmartHomeSetup(){
 
 
 var Home = {
-  appliances:[
+  appliance:[
     {
     name:'Refrigerator', /* User Defined */
     type:'switch',
-    status:'ON', /* Remote */
+    status:'on', /* Remote */
     serial:'@#4as',
-    automation:{on:[1230,0015], off:[1330,0634]}
+    automation:[1230,0730],
+    consumption:{
+      log12262019:[100,20,30,40,50,60,70,10,123,321,123,23],
+      log12252019:[21,23,54,65,23,76,98,122,89,21,34,78],
+      log12242019:[45,32,45,76,89,32,12,65,34,87,90,100],
+     }
     },
     {
     name:'Aircon', /* User Defined */
     type:'switch',
-    status:'ON', /* Remote */
-    serial:'@#4as',
-    timer:'Off',
+    status:true, /* Remote */
+    serial:'rocks',
+    timer:'off',
+    consumption:{
+      log12262019:[32,45,67,98,123,53,12,78,56,90,123,10],
+      log12252019:[45,32,45,76,89,32,12,65,34,87,90,100],
+      log12242019:[32,45,67,98,123,53,12,78,56,90,123,10],
+     }
+   },{
+   name:'Fan', /* User Defined */
+   type:'switch',
+   status:true, /* Remote */
+   serial:'staph',
+   timer:'off',
+   consumption:{
+     log12262019:[32,45,67,98,123,53,12,78,56,90,123,10],
+     log12252019:[45,32,45,76,89,32,12,65,34,87,90,100],
+     log12242019:[32,45,67,98,123,53,12,78,56,90,123,10],
     }
+  },{
+  name:'Lights', /* User Defined */
+  type:'switch',
+  status:true, /* Remote */
+  serial:'oleds',
+  timer:'off',
+  consumption:{
+    log12262019:[32,45,67,98,123,53,12,78,56,90,123,10],
+    log12252019:[45,32,45,76,89,32,12,65,34,87,90,100],
+    log12242019:[32,45,67,98,123,53,12,78,56,90,123,10],
+   }
+  }
 ],
-
-  log12262019:[
-    {serial:'Qa!e6', data:[100,20,30,40,50,60,70,10,123,321,123,23]},
-    {serial:'sdafg', data:[32,45,67,98,123,53,12,78,56,90,123,10]},
-  ],
-  log12252019:[
-    {serial:'Qa!e6', data:[100,20,30,40,50,60,70,10,123,321,123,23]},
-    {serial:'sdafg', data:[32,45,67,98,123,53,12,78,56,90,123,10]},
-  ],
-
 
 
 
@@ -114,16 +135,149 @@ var Home = {
 
 var Appliance = {
   init: function(){
+    for(i=0; i<Home.appliance.length; i++){
+      var article =
+      `<article><header>${Home.appliance[i].name}
+      <label class="switch"><input type="checkbox" ${(Home.appliance[i].status=='on'?'checked':'')}><span class="slider"></span></label></header>
+      <lu><li>Serial Key: ${btoa(Home.appliance[i].serial).replace('=','')}</li>
+      <li>Automation:<select><option>Beta</option></select></li>
+      <li>Consumption: ${this.consumption(i)} Watts</li>
+      </lu></article>`;
+      $('#appliances').append(article);
 
+    }
 
+  },
+  names: function(){
+    var name = [];
+    for(i=0; i<Home.appliance.length; i++){
+      name.push(Home.appliance[i].name);
+    }
+    return name;
+  },
+  consumption:function(i, offset=0){ /* total consumption of an appliance for a day, returns a number */
+    var arr =this.data(i,offset);
+    if (arr==null) return 0;
+    consumption=0; arr.map((val)=>{ consumption+=val;})
+    return consumption;
+  },
+  weekly:function(index=0,offset=0){ /* Weekly power consumption of an appliance */
+      var arr = [];
+      for (var i = offset; i > (offset-7) ; i--) {
+        arr.push(this.consumption(index,i));
+      }
+      return arr;
+  },
+  data: function(index, offset=0){ /* Hourly data of an appliance for a selected day: Select day using offset, returns an array */
+    try { temp =  Home.appliance[index].consumption[Time.log(offset)];}
+    catch (e) { temp = [0];}
+    finally { return temp; }
+  },
 
+  /* Function for total consumptions of all appliances in a day ( Hourly manner) */
+  dataTotal:function(offset=0){
+    var data = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+    for(i=0;i<Home.appliance.length; i++){
+      var temp = this.data(i,offset);
+        for(x=0;x<24;x++){
+          data[x] += (temp[x]||0);
+        }
+        return data;
+    }
+  },
+  weeklyTotal:function(offset=0){
+    var data = [0,0,0,0,0,0,0];
+    for(i=0;i<Home.appliance.length; i++){
+      var temp = this.weekly(i,offset);
+        for(x=0;x<7;x++){
+          data[x] += (temp[x]||0);
+        }
+        return data;
+    }
+  },
+  todayDistribution: function(offset=0){
+    var data = [];
+    for(i=0;i<Home.appliance.length; i++){
+      data.push(this.consumption(i, offset));
+        }
+        return data;
   }
-
 
 }
 
 
+var Charts = {
+  init: function(){
 
+
+    Charts['chart'] = new ApexCharts(document.querySelector('#chart'), this.options(Appliance.weeklyTotal()));
+    Charts['chart'].render();
+    asd = 1;
+    var A = setInterval( function(){
+      if(asd==1) {Charts['chart'].updateOptions(Charts.options(Appliance.dataTotal())); asd=0;}
+      else{
+        Charts['chart'].updateOptions(Charts.options(Appliance.weeklyTotal()));
+        asd=1;
+
+    } },10000);
+    this.renderDonut();
+  },
+  renderDonut: function(){
+    Charts['donut'] = new ApexCharts(
+      document.querySelector('#donut'),
+      {
+        chart: { height: 350, type: 'donut', },
+        stroke: {show: true, width: 0.7, colors: ['black']},
+        series: Appliance.todayDistribution(),
+        xaxis: { categories: [], labels:{show:true}},
+        plotOptions:{pie:{donut:{labels:{show:true,total:{showAlways:true,show:true}}}}},
+        labels:Appliance.names(),
+        tooltip: { y: { formatter: function (val) { return "" + val + "W"}}}
+    });
+    Charts['donut'].render();
+
+
+  },
+
+  options:function(data){
+      var template = {
+          chart: { height: 350, type: System.data.chartType, },
+          plotOptions: {
+              bar: { horizontal: false, columnWidth: '77%', endingShape: 'rounded'},
+              },
+          dataLabels: { enabled: false },
+          stroke: {curve:'smooth', show: true, width: 0.7, colors: ['black']},
+          series: [],
+          xaxis: { categories: [], labels:{show:true}},
+          legend:{show:false},
+          //yaxis: {},
+          fill:{ colors: [ ()=> { var hexDigits = new Array ("0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"); rgb = $('li[selected]').css('color'); rgb = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/); hex='#'; for(i=1;i<=3;i++){ hex+=isNaN(rgb[i]) ? "00" : hexDigits[(rgb[i] - rgb[i] % 16) / 16] + hexDigits[rgb[i] % 16];} return hex;}, '#aaa']},
+          tooltip: { y: { formatter: function (val) { return "" + val + "W"}}}
+      }
+      template.series = [{ name:'Power Consumption', data:data }];
+      switch (data.length) {
+          case 24:
+            template.xaxis.categories = Time.hours; template.xaxis.labels.show = false;
+            break;
+          case 30:
+            template.xaxis.categories = Time.range(-30,0); template.xaxis.labels.show = false;
+            break;
+        default:
+          template.xaxis.categories  = Time.days;
+
+      }
+
+        return template;
+    },
+
+
+
+
+
+
+
+
+}
 
 
 
@@ -142,46 +296,7 @@ function toggleSwitchRequest(target){
   $(`#${target}`).prop('checked', Boolean(xmlHttp.responseText));
 }
 
-var options= function(series, type){
-  var template = {
-      chart: { height: 350, type: System.data.chartType, },
-      plotOptions: {
-          bar: { horizontal: false, columnWidth: '77%', endingShape: 'rounded'},
-          },
-      dataLabels: { enabled: false },
-      stroke: { curve:'smooth', show: true, width: 0.7, colors: ['black'] },
-      series: series,
-      xaxis: { categories: [], labels:{show:true}},
-      //yaxis: {},
-      fill:{ colors: [ ()=> { var hexDigits = new Array ("0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"); rgb = $('li[selected]').css('color'); rgb = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/); hex='#'; for(i=1;i<=3;i++){ hex+=isNaN(rgb[i]) ? "00" : hexDigits[(rgb[i] - rgb[i] % 16) / 16] + hexDigits[rgb[i] % 16];} return hex;}, '#aaa']},
-      tooltip: { y: { formatter: function (val) { return "" + val + "W"}}}
-  }
 
-    switch (type) {
-      case 'monthly':
-        var month = ['Jan ','Feb ','Mar ','Apr ','May ','Jun ','Jul ','Aug ','Sep ','Oct ','Nov ','Dec '];
-        date = new Date;
-        days = [];
-        date.setDate(date.getDate() - 30);
-        for (var i = 30; i >0; i--) {
-          days.push(month[date.getMonth()]+date.getDate());
-          date.setDate(date.getDate() + 1);
-        }
-        days.push('Today');
-        template.xaxis.categories = days;
-        template.xaxis.labels.show = false;
-        break;
-      case 'weekly':
-        template.xaxis.categories = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-        break;
-      case 'today':
-        template.xaxis.categories = ['1:00 AM','2:00 AM','3:00 AM','4:00 AM','5:00 AM','6:00 AM','7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 NN','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM','7:00 PM','8:00 PM','9:00 PM','10:00 PM','11:00 PM','12:00 AM', ];
-        template.xaxis.labels.show = false;
-      default:
-    }
-    return template;
-
-}
 
 
 
@@ -235,7 +350,7 @@ var System = {
     },
     graphMode: function(){
 
-      if($('#todayCharts').html().trim()=='') return;
+      if($('#chart').html().trim()=='') return;
     location.reload();
     }
 

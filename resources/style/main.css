@@ -63,7 +63,7 @@ z-index
 
             body > header { background: linear-gradient(rgb(0,0,0,1), rgba(30,30,30,0.3)) !important; border-bottom: 1px solid #0f0f0f !important;}
             body > nav { background: rgb(30,30,30,0.77) !important; border-top: 1px solid #0f0f0f; }
-            [graph]{ filter: invert() hue-rotate(170deg); color:black;}
+            [graph]{ filter: invert() hue-rotate(180deg); color:black;}
 
 
       }

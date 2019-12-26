@@ -118,23 +118,27 @@
       <!-- Seections are the page itself -->
       <section>
         <article>
-          <header>Today
+          <header>Timeline
             <label class="switch"><input type="checkbox"><span class="slider"></span></label>
           </header>
-          <div graph id="todayCharts"></div>
-          <p id="todayTotal"></p>
+          <div graph id="chart"></div>
+          <select>
+            <option value="">Power Consumption</option>
+          </select>
+          <select>
+            <option value="">Power Consumption</option>
+          </select>
         </article>
 
         <article>
-          <header>This Week</header>
-          <div graph id="weeklyCharts"></div>
+          <header>Appliances</header>
+          <div graph id="donut"></div>
 
-          Currently on a major overhaul. 😇
         </article>
 
         <article>
-          <header>This Month</header>
-          <div graph id="monthlyCharts"></div>
+          <header>Computations</header>
+
 
         </article>
 
@@ -144,37 +148,8 @@
 
 
       <!-- Tab 2 -->
-      <section>
-        <article>
-          <header>Appliance 1
-          <label class="switch" onclick="" ><input id="sample" type="checkbox"><span class="slider"></span></label>
-          </header>
-        </article>
+      <section id="appliances">
 
-        <article>
-          <header>Online Switch
-            <label class="switch" onclick="toggleSwitchRequest('sample')" ><input id="sample" type="checkbox"><span class="slider"></span></label>
-          </header>
-          <button onclick="Modal.slide('Hello World!')">Hello</button>
-        </article>
-
-        <article>
-          <header>Click here to open the modal
-            <button onclick="Modal.alert('Hello')">Alert!</button>
-          </header>
-          <button onclick="Modal.options('Choose', 'labels here', ['One','Two','Three','Four'],['alert(\'option1\')','alert(\'option2\')','alert(\'option2\')','alert(\'option2\')'])">tooltip</button>
-        </article>
-
-        <article>
-          <header>Prompt Modal
-            <button onclick="Modal.prompt('Hello', 'click to alert','alert')">Prompt</button>
-          </header>
-          <header>Confirm Modal
-            <button onclick="Modal.confirm('Are you sure?', 'alert(\'Hello\')' )">Confirm</button>
-          </header>
-        </article>
-
-        <footer></footer>
       </section>
 
       <!-- Tab 3 -->
@@ -204,11 +179,7 @@
 
           </script>
         </article>
-        <article>
-          <iframe src="https://www.example.com"></iframe>
-          <iframe src="https://192.168.8.102:8080"></iframe>
-          <iframe src="https://drinjbremzrom.onthewifi.com"></iframe>
-        </article>
+
         <footer></footer>
       </section>
 
@@ -300,7 +271,44 @@
 
         <footer></footer>
       </section>
+
+      <!-- Modals Example Hidden Section -->
+      <section>
+        <article>
+          <header>Appliance 1
+          <label class="switch" onclick="" ><input id="sample" type="checkbox"><span class="slider"></span></label>
+          </header>
+        </article>
+
+        <article>
+          <header>Online Switch
+            <label class="switch" onclick="toggleSwitchRequest('sample')" ><input id="sample" type="checkbox"><span class="slider"></span></label>
+          </header>
+          <button onclick="Modal.slide('Hello World!')">Hello</button>
+        </article>
+
+        <article>
+          <header>Click here to open the modal
+            <button onclick="Modal.alert('Hello')">Alert!</button>
+          </header>
+          <button onclick="Modal.options('Choose', 'labels here', ['One','Two','Three','Four'],['alert(\'option1\')','alert(\'option2\')','alert(\'option2\')','alert(\'option2\')'])">tooltip</button>
+        </article>
+
+        <article>
+          <header>Prompt Modal
+            <button onclick="Modal.prompt('Hello', 'click to alert','alert')">Prompt</button>
+          </header>
+          <header>Confirm Modal
+            <button onclick="Modal.confirm('Are you sure?', 'alert(\'Hello\')' )">Confirm</button>
+          </header>
+        </article>
+
+        <footer></footer>
+      </section>
+
+
     </main>
+
 
 
 
