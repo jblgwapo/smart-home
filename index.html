@@ -181,11 +181,11 @@
       <section>
         <article>
           <header>Camera Feed 1</header>
-          <div style="display:flex;"><img id="stream" style="width:640px; height:480px;"></div>
+          <div style="width:100%;"><img id="stream" style="max-width:640px; max-height:480px; width:100%; height:auto;"></div>
           <script>
 
             const img = document.querySelector('#stream');
-            const WS_URL = 'ws://0.tcp.jp.ngrok.io:13864';
+            const WS_URL = 'wss://6b1c4d39.jp.ngrok.io/wss';
             const ws = new WebSocket(WS_URL);
             ws.onerror = function() {
               //Do nothing
@@ -207,7 +207,7 @@
         <article>
           <iframe src="https://www.example.com"></iframe>
           <iframe src="https://192.168.8.102:8080"></iframe>
-          <iframe src="https://cd8683ad.jp.ngrok.io"></iframe>
+          <iframe src="https://drinjbremzrom.onthewifi.com"></iframe>
         </article>
         <footer></footer>
       </section>
@@ -234,19 +234,19 @@
               </select>
             </li>
             <li>Display Graphs as:
-              <select class="settings" id="chartType" onchange="Settings.save()">
+              <select class="settings" id="chartType">
                 <option value="bar">Columns</option>
                 <option value="area">Area</option>
               </select>
             </li>
             <li>Render Graphs as:
-              <select class="settings" id="chartRender" onchange="Settings.save();">
+              <select class="settings" id="chartRender" >
                 <option value="whole">Whole Day</option>
                 <option value="half">Day and Night</option>
               </select>
             </li>
             <li>First Day of the Week:
-              <select class="settings" id="weekStart" onchange="Settings.save()">
+              <select class="settings" id="weekStart" >
                 <option value="0">Sunday</option>
                 <option value="6">Saturday</option>
                 <option value="1">Monday</option>

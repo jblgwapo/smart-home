@@ -1,7 +1,7 @@
 $(document).ready(function(){
 
-
-
+  console.log(btoa('jale\''));
+console.log(atob(''));
   // Setup Infos
   var data = JSON.parse(localStorage.getItem('credentials'));
   if( data==null ){ Modal.slide('Let\'s Get Started.','User Name:<input type="text" id="_username"><br>Home Serial Key<input type="text" id="_home-serial"><br><button onclick="SmartHomeSetup()">Submit</button>', 'Modal.alert(\'Please Complete the details\')'); return;}
@@ -9,28 +9,33 @@ $(document).ready(function(){
 
 System.init();
   // Graphs
-  var today = new ApexCharts(
+  Home['today'] = new ApexCharts(
     document.querySelector('#todayCharts'),
     options([{name:'Today',data:[123,123,123,123,432,123,321,432,123,234,123,412,0,0,0,0,0,0,0,0,0,0,0,0]},{name:'Yesterday',data:[0,0,0,0,0,0,0,0,0,0,0,0,123,123,123,123,432,123,321,432,123,234,123,412]}], 'today')
   );
 
-  var weekly = new ApexCharts(
+  Home['weekly'] = new ApexCharts(
     document.querySelector('#weeklyCharts'),
     options([{name:'Power Consumption',data:[123,123,123,321,321,123,321]}], 'weekly')
   );
 
-  var monthly = new ApexCharts(
+  Home['monthly'] = new ApexCharts(
     document.querySelector('#monthlyCharts'),
     options([{name:'Power Consumption',data:[123,123,123,321,321,321,31,23,123,213,12,32,12,32,12,322,12,312,3,12,3,213,122,3,213,12,123,12,21,31,21]}], 'monthly')
   );
 
 
-today.render();
-weekly.render();
-monthly.render();
+Home['today'].render();
+Home['weekly'].render();
+Home['monthly'].render();
 
-
-
+setTimeout(
+  ()=>{
+Home['weekly'].updateOptions(
+  options([{name:'Power Consumption',data:[321,231,123,23,123,231,123]}], 'weekly')
+)},
+3000
+);
 
 
 // TEst
@@ -68,33 +73,54 @@ function SmartHomeSetup(){
 
 
 var Home = {
-  today:{
-    day:[321,13,123,13,123,123,123,123,321,321,123,231],
-    night:[23,32,32,12,321,32,321,23,313,123,222,312]
-  },
-  weekly:{},
-  lifetime:{
-
-
-
-  },
-
-  appliances:[{
+  appliances:[
+    {
     name:'Refrigerator', /* User Defined */
+    type:'switch',
     status:'ON', /* Remote */
-    consumption:[13,123,3213,123,123,1232,1,1321,321], /* Power Consumption Data in watts */
+    serial:'@#4as',
+    automation:{on:[1230,0015], off:[1330,0634]}
+    },
+    {
+    name:'Aircon', /* User Defined */
+    type:'switch',
+    status:'ON', /* Remote */
+    serial:'@#4as',
+    timer:'Off',
+    }
+],
 
-  }],
+  log12262019:[
+    {serial:'Qa!e6', data:[100,20,30,40,50,60,70,10,123,321,123,23]},
+    {serial:'sdafg', data:[32,45,67,98,123,53,12,78,56,90,123,10]},
+  ],
+  log12252019:[
+    {serial:'Qa!e6', data:[100,20,30,40,50,60,70,10,123,321,123,23]},
+    {serial:'sdafg', data:[32,45,67,98,123,53,12,78,56,90,123,10]},
+  ],
+
+
+
+
+
+};
+
+
+
+
+
+
+//OBJ for appliances
+
+var Appliance = {
+  init: function(){
+
+
+
+  }
 
 
 }
-
-
-
-
-
-
-//Function to convert rgb color to hex format
 
 
 
@@ -127,7 +153,7 @@ var options= function(series, type){
       series: series,
       xaxis: { categories: [], labels:{show:true}},
       //yaxis: {},
-      fill:{ colors: [ ()=> { var hexDigits = new Array ("0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"); rgb = $('li[selected]').css('color'); rgb = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/); hex='#'; for(i=1;i<=3;i++){ hex+=isNaN(rgb[i]) ? "00" : hexDigits[(rgb[i] - rgb[i] % 16) / 16] + hexDigits[rgb[i] % 16];} return hex;}, '#777']},
+      fill:{ colors: [ ()=> { var hexDigits = new Array ("0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"); rgb = $('li[selected]').css('color'); rgb = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/); hex='#'; for(i=1;i<=3;i++){ hex+=isNaN(rgb[i]) ? "00" : hexDigits[(rgb[i] - rgb[i] % 16) / 16] + hexDigits[rgb[i] % 16];} return hex;}, '#aaa']},
       tooltip: { y: { formatter: function (val) { return "" + val + "W"}}}
   }
 
@@ -208,8 +234,9 @@ var System = {
       $('body').get(0).style.setProperty("--accent",`var(--${System.data.theme})`);
     },
     graphMode: function(){
+
       if($('#todayCharts').html().trim()=='') return;
-      location.reload();
+    location.reload();
     }
 
   }, //End of methods
