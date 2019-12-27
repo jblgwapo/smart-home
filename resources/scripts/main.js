@@ -28,7 +28,7 @@ console.log(navigator.onLine);
 
 // test end
 });
-
+const total = arr => arr.reduce((a,b) => a + b, 0);
 
 
 
@@ -103,7 +103,7 @@ var Home = {
    serial:'staph',
    timer:'off',
    consumption:{
-     log12262019:[32,45,67,98,123,53,12,78,56,90,123,10],
+     log12262019:[232,45,90,70,55,100,43,90,65,9,100,120],
      log12252019:[45,32,45,76,89,32,12,65,34,87,90,100],
      log12242019:[32,45,67,98,123,53,12,78,56,90,123,10],
     }
@@ -114,14 +114,19 @@ var Home = {
   serial:'oleds',
   timer:'off',
   consumption:{
-    log12262019:[32,45,67,98,123,53,12,78,56,90,123,10],
+    log12262019:[12,21,43,34,32,1,54,56,87,78,67,10],
     log12252019:[45,32,45,76,89,32,12,65,34,87,90,100],
     log12242019:[32,45,67,98,123,53,12,78,56,90,123,10],
    }
   }
 ],
 
-
+camera:[{
+  name:'ESP CAM',
+  lightsCapable:'yes',
+  serial:'Qa!e6',
+  socket:'wss://6b1c4d39.jp.ngrok.io/wss'
+}],
 
 
 };
@@ -136,17 +141,34 @@ var Home = {
 var Appliance = {
   init: function(){
     for(i=0; i<Home.appliance.length; i++){
-      var article =
+      var appliance =
       `<article><header>${Home.appliance[i].name}
       <label class="switch"><input type="checkbox" ${(Home.appliance[i].status=='on'?'checked':'')}><span class="slider"></span></label></header>
       <lu><li>Serial Key: ${btoa(Home.appliance[i].serial).replace('=','')}</li>
+      <li>Type: ${Home.appliance[i].type}</li>
       <li>Automation:<select><option>Beta</option></select></li>
-      <li>Consumption: ${this.consumption(i)} Watts</li>
+      <li>Consumption: ${this.consumption(i)} Watts today</li>
       </lu></article>`;
-      $('#appliances').append(article);
+      $('#appliances').append(appliance);
+
+    }
+    console.log(Home.camera.length + ' Cam');
+    for(i=0; i<Home.camera.length;i++){
+      var camera =
+      `<article> <header>${Home.camera[i].name}</header>
+          <div style="width:100%;"><img id="${btoa(Home.camera[i].serial).replace('=','')}" style="max-width:640px; max-height:480px; width:100%; height:auto;"></div>
+        <script> const img = document.querySelector('#${btoa(Home.camera[i].serial).replace('=','')}'); const WS_URL = '${Home.camera[i].socket}'; const ws = new WebSocket(WS_URL); ws.onerror = function() {}; let urlObject; ws.onmessage = message => { const arrayBuffer = message.data; if(urlObject){ URL.revokeObjectURL(urlObject);} urlObject = URL.createObjectURL(new Blob([arrayBuffer])); delete arrayBuffer; delete message; img.src = urlObject;} </script>
+      </article>`;
+      $('#camera').append(camera);
 
     }
 
+
+
+
+
+    console.log('Consumption' + this.consumption(0));
+    console.log('Weekly' + '' );
   },
   names: function(){
     var name = [];
@@ -155,12 +177,39 @@ var Appliance = {
     }
     return name;
   },
-  consumption:function(i, offset=0){ /* total consumption of an appliance for a day, returns a number */
-    var arr =this.data(i,offset);
-    if (arr==null) return 0;
-    consumption=0; arr.map((val)=>{ consumption+=val;})
-    return consumption;
+
+
+
+
+  data: function(index, offset=0){ /* Hourly data of an appliance for a selected day: Select day using offset, returns an array */
+    temp =  Home.appliance[index].consumption[Time.log(offset)];
+    return (temp==null? [0]: temp);
   },
+  consumption: function(index, offset=0){
+    return total(this.data(index,offset));
+
+  },
+
+  dayChartData: function(offset=0){
+    var data=[];
+    for(i=0; i<Home.appliance.length; i++){
+      data[i]=(this.data(i, offset));
+    }
+    return data;
+  },
+
+  weeklyChartData: function(){
+    var data=[];
+    for(offset=-7; offset<0; offset++){
+      for(i=0; i<Home.appliance.length; i++){
+        data[offset][i]=consumption(this.data(i, offset));
+      }
+    }
+
+  },
+
+
+// Experimentals
   weekly:function(index=0,offset=0){ /* Weekly power consumption of an appliance */
       var arr = [];
       for (var i = offset; i > (offset-7) ; i--) {
@@ -168,11 +217,7 @@ var Appliance = {
       }
       return arr;
   },
-  data: function(index, offset=0){ /* Hourly data of an appliance for a selected day: Select day using offset, returns an array */
-    try { temp =  Home.appliance[index].consumption[Time.log(offset)];}
-    catch (e) { temp = [0];}
-    finally { return temp; }
-  },
+
 
   /* Function for total consumptions of all appliances in a day ( Hourly manner) */
   dataTotal:function(offset=0){
@@ -182,9 +227,12 @@ var Appliance = {
         for(x=0;x<24;x++){
           data[x] += (temp[x]||0);
         }
-        return data;
     }
+    return data;
   },
+
+
+
   weeklyTotal:function(offset=0){
     var data = [0,0,0,0,0,0,0];
     for(i=0;i<Home.appliance.length; i++){
@@ -200,83 +248,126 @@ var Appliance = {
     for(i=0;i<Home.appliance.length; i++){
       data.push(this.consumption(i, offset));
         }
+        console.log(data);
         return data;
-  }
+  },
+  weeklyDistribution:function(offset=0){
+    var data = [];
+    for(i=0;i<Home.appliance.length; i++){
+      var temp = this.weekly(i,offset);
+      var sum = 0;
+        for(x=0;x<7;x++){
+          sum += (temp[x]||0);
+        }
+        data.push(sum);
 
+    }
+    return data;},
 }
 
 
 var Charts = {
   init: function(){
+    this.renderDonut(Appliance.dayChartData(-1));
+
+    console.log('dis'+Appliance.dayChartData(-1));
+    Charts['chart'] = new ApexCharts(document.querySelector('#chart'), this.options(Appliance.dayChartData(-1)));
+
+    Charts['chart'].render(); this.changeView();
+    console.log(Appliance.names);
+    Appliance.names().map(val => { $('#chartView').append(`<option value="${val}">${val}</option>`); })
+    $('#chartView').append(`<option value="compare">Compare</option>`);
 
 
-    Charts['chart'] = new ApexCharts(document.querySelector('#chart'), this.options(Appliance.weeklyTotal()));
-    Charts['chart'].render();
-    asd = 1;
-    var A = setInterval( function(){
-      if(asd==1) {Charts['chart'].updateOptions(Charts.options(Appliance.dataTotal())); asd=0;}
-      else{
-        Charts['chart'].updateOptions(Charts.options(Appliance.weeklyTotal()));
-        asd=1;
 
-    } },10000);
-    this.renderDonut();
+
+
+
+
   },
-  renderDonut: function(){
+  changeView: function(){
+    series = (Appliance.names()); series.push('Home');
+    var target = $('#chartView').val();
+
+    if(target=='compare'){
+      for(i=0; i<series.length;i++){ if(series[i]=='Home'){Charts['chart'].hideSeries(series[i]); continue}; Charts['chart'].showSeries(series[i]);
+    }
+      return;
+    }
+    for(i=0; i<series.length;i++){
+      if (series[i]==target) {Charts['chart'].showSeries(series[i]); continue}
+      Charts['chart'].hideSeries(series[i]);
+    }
+
+
+
+
+
+
+
+  },
+
+
+  renderDonut: function(data){
+
+    for(i=0; i<data.length; i++){ data[i]=(total(data[i]));}
     Charts['donut'] = new ApexCharts(
       document.querySelector('#donut'),
       {
         chart: { height: 350, type: 'donut', },
         stroke: {show: true, width: 0.7, colors: ['black']},
-        series: Appliance.todayDistribution(),
+        series: data,
         xaxis: { categories: [], labels:{show:true}},
         plotOptions:{pie:{donut:{labels:{show:true,total:{showAlways:true,show:true}}}}},
         labels:Appliance.names(),
         tooltip: { y: { formatter: function (val) { return "" + val + "W"}}}
-    });
-    Charts['donut'].render();
+    }
+  );
 
+
+    Charts['donut'].render();
 
   },
 
   options:function(data){
       var template = {
-          chart: { height: 350, type: System.data.chartType, },
+          chart: { height: 350, type: System.data.chartType},
           plotOptions: {
-              bar: { horizontal: false, columnWidth: '77%', endingShape: 'rounded'},
+              bar: { horizontal: false, columnWidth: '77%', endingShape: 'flat'},
               },
           dataLabels: { enabled: false },
           stroke: {curve:'smooth', show: true, width: 0.7, colors: ['black']},
           series: [],
           xaxis: { categories: [], labels:{show:true}},
           legend:{show:false},
-          //yaxis: {},
+          theme:{monochrome:{enabled:true,}},
           fill:{ colors: [ ()=> { var hexDigits = new Array ("0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"); rgb = $('li[selected]').css('color'); rgb = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/); hex='#'; for(i=1;i<=3;i++){ hex+=isNaN(rgb[i]) ? "00" : hexDigits[(rgb[i] - rgb[i] % 16) / 16] + hexDigits[rgb[i] % 16];} return hex;}, '#aaa']},
           tooltip: { y: { formatter: function (val) { return "" + val + "W"}}}
       }
-      template.series = [{ name:'Power Consumption', data:data }];
-      switch (data.length) {
-          case 24:
-            template.xaxis.categories = Time.hours; template.xaxis.labels.show = false;
+      var home = new Array(data[0].length).fill(0);
+      console.log(data);
+      for (var i = 0; i < data.length; i++) {
+        for(x=0; x<data[i].length; x++){
+          home[x]+=(data[i][x]||0);
+        }
+      }
+      template.series = [{name:'Home', data:home}];
+      var names = Appliance.names();
+      for (var i = 0; i < data.length; i++) {
+        template.series.push({name:names[i], data:data[i]});
+      }
+      switch (data[0].length) {
+          case 7:
+          template.xaxis.categories  = Time.days;
             break;
           case 30:
             template.xaxis.categories = Time.range(-30,0); template.xaxis.labels.show = false;
             break;
         default:
-          template.xaxis.categories  = Time.days;
-
+        template.xaxis.categories = Time.hours;
       }
-
         return template;
     },
-
-
-
-
-
-
-
-
 }
 
 

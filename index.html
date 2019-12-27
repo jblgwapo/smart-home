@@ -122,11 +122,13 @@
             <label class="switch"><input type="checkbox"><span class="slider"></span></label>
           </header>
           <div graph id="chart"></div>
-          <select>
-            <option value="">Power Consumption</option>
+          <select id="chartView" onchange="Charts.changeView()">
+            <option value="Home">Home</option>
           </select>
-          <select>
-            <option value="">Power Consumption</option>
+          <select id="chartDate">
+            <option value="thisDay">Today</option>
+            <option value="thisWeek">Weekly</option>
+            <option value="thisMonth">Monthly</option>
           </select>
         </article>
 
@@ -153,32 +155,8 @@
       </section>
 
       <!-- Tab 3 -->
-      <section>
-        <article>
-          <header>Camera Feed 1</header>
-          <div style="width:100%;"><img id="stream" style="max-width:640px; max-height:480px; width:100%; height:auto;"></div>
-          <script>
+      <section id="camera">
 
-            const img = document.querySelector('#stream');
-            const WS_URL = 'wss://6b1c4d39.jp.ngrok.io/wss';
-            const ws = new WebSocket(WS_URL);
-            ws.onerror = function() {
-              //Do nothing
-            }
-            let urlObject;
-            ws.onmessage = message => {
-                const arrayBuffer = message.data;
-                if(urlObject){
-                    URL.revokeObjectURL(urlObject);
-                }
-                urlObject = URL.createObjectURL(new Blob([arrayBuffer]));
-                delete arrayBuffer;
-                 delete message;
-                 img.src = urlObject;
-            }
-
-          </script>
-        </article>
 
         <footer></footer>
       </section>
@@ -210,25 +188,14 @@
                 <option value="area">Area</option>
               </select>
             </li>
-            <li>Render Graphs as:
-              <select class="settings" id="chartRender" >
-                <option value="whole">Whole Day</option>
-                <option value="half">Day and Night</option>
-              </select>
-            </li>
-            <li>First Day of the Week:
-              <select class="settings" id="weekStart" >
-                <option value="0">Sunday</option>
-                <option value="6">Saturday</option>
-                <option value="1">Monday</option>
-              </select>
-            </li>
+
             <li>
               Currency:
               <input type="number" value="9.96">
             </li>
-          </lu>
 
+          </lu>
+          <button>Save Settings</button>
         </article>
 
         <article>
