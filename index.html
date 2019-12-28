@@ -66,6 +66,7 @@
     <link id="style" rel="stylesheet" type="text/css" href="resources/style/apexcharts.css">
 
     <!-- Title -->
+    <style>.apexharts-canvas{ background: #000 !important;}</style>
     <title>Smart Home (Thesis)</title>
   </head>
   <body>
@@ -125,7 +126,7 @@
           <select id="chartView" onchange="Charts.changeView()">
             <option value="Home">Home</option>
           </select>
-          <select id="chartDate">
+          <select id="chartDate" onchange="Charts.updateView()">
             <option value="thisDay">Today</option>
             <option value="thisWeek">Weekly</option>
             <option value="thisMonth">Monthly</option>
@@ -190,8 +191,8 @@
             </li>
 
             <li>
-              Currency:
-              <input type="number" value="9.96">
+              Electrical Cost (Price):
+              <input type="number" class="settings" id="cost" value="9.96">
             </li>
 
           </lu>

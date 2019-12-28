@@ -15,7 +15,7 @@ Charts.init();
 
 
 
-console.log(Appliance.dataTotal());
+console.log(Appliance.weeklyChartData(-1));
 
 
 // TEst
@@ -80,6 +80,7 @@ var Home = {
     serial:'@#4as',
     automation:[1230,0730],
     consumption:{
+      log12282019:[10,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12],
       log12262019:[100,20,30,40,50,60,70,10,123,321,123,23],
       log12252019:[21,23,54,65,23,76,98,122,89,21,34,78],
       log12242019:[45,32,45,76,89,32,12,65,34,87,90,100],
@@ -92,6 +93,7 @@ var Home = {
     serial:'rocks',
     timer:'off',
     consumption:{
+      log12282019:[45,32,45,76,89,32,12,65,34,87,90,100],
       log12262019:[32,45,67,98,123,0,0,0,0,0,0,53,12,78,56,90,123,10],
       log12252019:[45,32,45,76,89,32,12,65,34,87,90,100],
       log12242019:[32,45,67,98,123,53,12,78,56,90,123,10],
@@ -103,6 +105,7 @@ var Home = {
    serial:'staph',
    timer:'off',
    consumption:{
+     log12282019:[32,45,67,98,123,53,12,78,56,90,123,10],
      log12262019:[232,45,90,70,55,100,43,90,65,9,100,120,232,45,90,70,55,100,43,90,65,9,100,120],
      log12252019:[45,32,45,76,89,32,12,65,34,87,90,100],
      log12242019:[32,45,67,98,123,53,12,78,56,90,123,10],
@@ -114,7 +117,7 @@ var Home = {
   serial:'oleds',
   timer:'off',
   consumption:{
-    log12262019:[12,21,43,34,32,1,54,56,87,78,67,10],
+    log12262019:[0,0,0,0,0,12,21,43,34,32,1,54,56,87,78,67,10],
     log12252019:[45,32,45,76,89,32,12,65,34,87,90,100],
     log12242019:[32,45,67,98,123,53,12,78,56,90,123,10],
    }
@@ -187,98 +190,57 @@ var Appliance = {
   },
   consumption: function(index, offset=0){
     return total(this.data(index,offset));
-
   },
 
   dayChartData: function(offset=0){
-    var data=[];
+    var data=[]; var sum = Array(24).fill(0);
+
     for(i=0; i<Home.appliance.length; i++){
       data[i]=(this.data(i, offset));
+      data[i].map((val, idx)=>{ sum[idx] += val;});
     }
+    data.push(sum);
     return data;
   },
 
-  weeklyChartData: function(){
-    var data=[];
-    for(offset=-7; offset<0; offset++){
-      for(i=0; i<Home.appliance.length; i++){
-        data[offset][i]=consumption(this.data(i, offset));
+  weeklyChartData: function(offset=0){
+    var data = []; sum = Array(7).fill(0)
+    for(i=0; i<Home.appliance.length; i++){
+      data[i]=[];
+      for(offset=0; offset<7; offset++){
+        data[i].push (total(this.data(i, offset-6)));
       }
+      data[i].map((val, idx)=>{ sum[idx] += val;});
     }
-
-  },
-
-
-// Experimentals
-  weekly:function(index=0,offset=0){ /* Weekly power consumption of an appliance */
-      var arr = [];
-      for (var i = offset; i > (offset-7) ; i--) {
-        arr.push(this.consumption(index,i));
-      }
-      return arr;
-  },
-
-
-  /* Function for total consumptions of all appliances in a day ( Hourly manner) */
-  dataTotal:function(offset=0){
-    var data = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
-    for(i=0;i<Home.appliance.length; i++){
-      var temp = this.data(i,offset);
-        for(x=0;x<24;x++){
-          data[x] += (temp[x]||0);
-        }
-    }
+    data.push(sum);
     return data;
   },
-
-
-
-  weeklyTotal:function(offset=0){
-    var data = [0,0,0,0,0,0,0];
-    for(i=0;i<Home.appliance.length; i++){
-      var temp = this.weekly(i,offset);
-        for(x=0;x<7;x++){
-          data[x] += (temp[x]||0);
-        }
-        return data;
+  monthlyChartData: function(){
+    var data = []; sum = Array(30).fill(0)
+    for(i=0; i<Home.appliance.length; i++){
+      data[i]=[];
+      for(offset=0; offset<30; offset++){
+        data[i].push (total(this.data(i, offset-29)));
+      }
+      data[i].map((val, idx)=>{ sum[idx] += val;});
     }
-  },
-  todayDistribution: function(offset=0){
-    var data = [];
-    for(i=0;i<Home.appliance.length; i++){
-      data.push(this.consumption(i, offset));
-        }
-        console.log(data);
-        return data;
-  },
-  weeklyDistribution:function(offset=0){
-    var data = [];
-    for(i=0;i<Home.appliance.length; i++){
-      var temp = this.weekly(i,offset);
-      var sum = 0;
-        for(x=0;x<7;x++){
-          sum += (temp[x]||0);
-        }
-        data.push(sum);
+    data.push(sum);
+    return data;
 
-    }
-    return data;},
+  },
+
 }
 
 
 var Charts = {
   init: function(){
-    this.renderDonut(Appliance.dayChartData(-1));
+    this.updateView();
 
-    console.log('dis'+Appliance.dayChartData(-1));
-    Charts['chart'] = new ApexCharts(document.querySelector('#chart'), this.options(Appliance.dayChartData(-1)));
 
-    Charts['chart'].render(); this.changeView();
-    console.log(Appliance.names);
+
+    $('#chartView').html(`<option value="Home">Home</option>`);
     Appliance.names().map(val => { $('#chartView').append(`<option value="${val}">${val}</option>`); })
     $('#chartView').append(`<option value="compare">Compare</option>`);
-
-
 
 
 
@@ -298,10 +260,27 @@ var Charts = {
       if (series[i]==target) {Charts['chart'].showSeries(series[i]); continue}
       Charts['chart'].hideSeries(series[i]);
     }
-
-
-
-
+  },
+  updateView: function(){
+    var target = $('#chartDate').val().trim();
+    switch (target) {
+      case 'thisDay':
+        this.renderChart(Appliance.dayChartData());
+        this.renderDonut(Appliance.dayChartData());
+        this.changeView();
+        break;
+        case 'thisWeek':
+        this.renderChart(Appliance.weeklyChartData());
+        this.renderDonut(Appliance.weeklyChartData());
+        this.changeView();
+          break;
+          case 'thisMonth':
+          this.renderChart(Appliance.monthlyChartData());
+          this.renderDonut(Appliance.monthlyChartData());
+          this.changeView();
+            break;
+      default:
+    };
 
 
 
@@ -309,11 +288,37 @@ var Charts = {
 
 
   renderDonut: function(data){
+      var log = {
+        total_consumption:'',
+        average_consumption:'',
+
+        peak_hours:'',
+        cost_per_watt:'',
+        estimated_cost:'',
+        most_used_appliance:'',
+        appliances:[],
+        consumption:[],
+
+
+      };
+      switch (data[data.length].length) {
+        case 24:
+
+          break;
+        case 7:
+
+          break;
+        case 30:
+
+          break;
+        default:
+      };
+
+
 
     for(i=0; i<data.length; i++){ data[i]=(total(data[i]));}
-    Charts['donut'] = new ApexCharts(
-      document.querySelector('#donut'),
-      {
+    log.total_consumption = data.pop();
+      var template = {
         chart: { height: 350, type: 'donut', },
         stroke: {show: true, width: 0.7, colors: ['black']},
         series: data,
@@ -321,15 +326,18 @@ var Charts = {
         plotOptions:{pie:{donut:{labels:{show:true,total:{showAlways:true,show:true}}}}},
         labels:Appliance.names(),
         tooltip: { y: { formatter: function (val) { return "" + val + "W"}}}
+    };
+
+    if (typeof(Charts['donut'])=='undefined'){
+      Charts['donut'] = new ApexCharts( document.querySelector('#donut'),template);
+      Charts['donut'].render();
     }
-  );
-
-
-    Charts['donut'].render();
-
+      else{
+      Charts['donut'].updateOptions(template);
+      }
   },
 
-  options:function(data){
+  renderChart:function(data){
       var template = {
           chart: { height: 350, type: System.data.chartType},
           plotOptions: {
@@ -338,11 +346,11 @@ var Charts = {
           dataLabels: { enabled: false },
           stroke: {curve:'smooth', show: true, width: 0.7, colors: ['black']},
           series: [],
-          xaxis: { categories: [], labels:{show:true}},
+          xaxis: { categories: [], labels:{show:true, style:{fontSize:'9px'}}},
           legend:{show:false},
           theme:{monochrome:{enabled:true,}},
           fill:{ colors: [ ()=> { var hexDigits = new Array ("0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"); rgb = $('li[selected]').css('color'); rgb = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/); hex='#'; for(i=1;i<=3;i++){ hex+=isNaN(rgb[i]) ? "00" : hexDigits[(rgb[i] - rgb[i] % 16) / 16] + hexDigits[rgb[i] % 16];} return hex;}, '#aaa']},
-          tooltip: { y: { formatter: function (val) { return "" + val + "W"}}}
+          tooltip: { y: { formatter: function (val) { return "" + (val||0) + "W"}}}
       }
       var home = new Array(data[0].length).fill(0);
       console.log(data);
@@ -351,8 +359,8 @@ var Charts = {
           home[x]+=(data[i][x]||0);
         }
       }
-      template.series = [{name:'Home', data:home}];
-      var names = Appliance.names();
+
+      var names = Appliance.names().concat(['Home']);
       for (var i = 0; i < data.length; i++) {
         template.series.push({name:names[i], data:data[i]});
       }
@@ -366,8 +374,17 @@ var Charts = {
         default:
         template.xaxis.categories = Time.hours;
       }
-        return template;
+
+      if (typeof(Charts['chart'])=='undefined'){
+        Charts['chart'] = new ApexCharts( document.querySelector('#chart'), template );
+        Charts['chart'].render(); //this.changeView();
+      }
+        else{
+        Charts['chart'].updateOptions(template);
+        }
     },
+
+
 }
 
 
@@ -426,7 +443,8 @@ var System = {
     this.data = {
       theme:$('#theme').val(),
       chartType:$('#chartType').val(),
-      chartRender:$('#chartRender').val(),
+      cost:$('#cost').val(),
+
     }
     console.log(this.data);
     localStorage.setItem('settings',JSON.stringify(this.data));
