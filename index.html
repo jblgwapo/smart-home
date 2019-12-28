@@ -122,15 +122,21 @@
           <header>Timeline
             <label class="switch"><input type="checkbox"><span class="slider"></span></label>
           </header>
+
           <div graph id="chart"></div>
-          <select id="chartView" onchange="Charts.changeView()">
+          <div id="third">
+          <select id="chartView" onchange="Charts.changeView()" class="third">
             <option value="Home">Home</option>
           </select>
-          <select id="chartDate" onchange="Charts.updateView()">
+          <select id="chartDate" onchange="Charts.updateView()" class="third">
             <option value="thisDay">Today</option>
             <option value="thisWeek">Weekly</option>
             <option value="thisMonth">Monthly</option>
           </select>
+          <select id="chartOffset" onchange="Charts.updateView()" class="third">
+            <option value="0">Present</option>
+          </select>
+        </div>
         </article>
 
         <article>
@@ -139,7 +145,7 @@
 
         </article>
 
-        <article>
+        <article id="computations">
           <header>Computations</header>
 
 
@@ -191,7 +197,7 @@
             </li>
 
             <li>
-              Electrical Cost (Price):
+              Electrical Cost/Kw (Price):
               <input type="number" class="settings" id="cost" value="9.96">
             </li>
 

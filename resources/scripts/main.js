@@ -7,10 +7,11 @@ console.log(atob(''));
   if( data==null ){ Modal.slide('Let\'s Get Started.','User Name:<input type="text" id="_username"><br>Home Serial Key<input type="text" id="_home-serial"><br><button onclick="SmartHomeSetup()">Submit</button>', 'Modal.alert(\'Please Complete the details\')'); return;}
     $('#username').val(data.username); $('#serial').val(data.serial);
 
+
 System.init();
 Appliance.init();
   // Graphs
-Charts.init();
+
 
 
 
@@ -44,13 +45,24 @@ var Time = {
     date.setDate(date.getDate() + index);
     return this.months[date.getMonth()]+date.getDate();
   },
+  days: function(offset=0){
+    date = new Date;
+    date.setDate(date.getDate() -6 + offset);
+    arr=[];
+    for (var i = 0; i <7; i++) {
+      arr.push(this.day[date.getDay()])
+      date.setDate(date.getDate() +1);
+    }
+    return arr;
+  },
+
   range: function(start, end){
     var arr=[];
     for(i=start; i<end; i++) {arr.push(this.date(i))};
     return arr;
   },
   months:['Jan ','Feb ','Mar ','Apr ','May ','Jun ','Jul ','Aug ','Sep ','Oct ','Nov ','Dec '],
-  days:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+  day:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
   hours: ['1:00 AM','2:00 AM','3:00 AM','4:00 AM','5:00 AM','6:00 AM','7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 NN','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM','7:00 PM','8:00 PM','9:00 PM','10:00 PM','11:00 PM','12:00 AM' ],
 }
 
@@ -143,19 +155,25 @@ camera:[{
 
 var Appliance = {
   init: function(){
+    hours=''; minutes='';
+    for(i=0;i<=12;i++){
+      hours+='<option value="'+(i*100)+'">'+i+'</option>';
+    }
+    for(i=0;i<60;i++){
+      minutes+='<option value="'+(i*100)+'">'+i+'</option>';
+    }
+
     for(i=0; i<Home.appliance.length; i++){
       var appliance =
       `<article><header>${Home.appliance[i].name}
       <label class="switch"><input type="checkbox" ${(Home.appliance[i].status=='on'?'checked':'')}><span class="slider"></span></label></header>
       <lu><li>Serial Key: ${btoa(Home.appliance[i].serial).replace('=','')}</li>
       <li>Type: ${Home.appliance[i].type}</li>
-      <li>Automation:<select><option>Beta</option></select></li>
+      <li>Automation:<br><select class="third">${hours}</select> <select class="third">${minutes}</select> <select class="third"><option>AM</option><option>PM</option></select></li>
       <li>Consumption: ${this.consumption(i)} Watts today</li>
       </lu></article>`;
       $('#appliances').append(appliance);
-
     }
-    console.log(Home.camera.length + ' Cam');
     for(i=0; i<Home.camera.length;i++){
       var camera =
       `<article> <header>${Home.camera[i].name}</header>
@@ -166,12 +184,6 @@ var Appliance = {
 
     }
 
-
-
-
-
-    console.log('Consumption' + this.consumption(0));
-    console.log('Weekly' + '' );
   },
   names: function(){
     var name = [];
@@ -180,10 +192,14 @@ var Appliance = {
     }
     return name;
   },
-
-
-
-
+  oldest: function(){
+    var dates = [];
+    for(i=0;i<Home.appliance.length;i++){
+      Object.keys(Home.appliance[i].consumption).map(val=>{dates.push(val)});
+    }
+    dates.sort()
+    return dates[0];
+  },
   data: function(index, offset=0){ /* Hourly data of an appliance for a selected day: Select day using offset, returns an array */
     temp =  Home.appliance[index].consumption[Time.log(offset)];
     return (temp==null? [0]: temp);
@@ -207,20 +223,20 @@ var Appliance = {
     var data = []; sum = Array(7).fill(0)
     for(i=0; i<Home.appliance.length; i++){
       data[i]=[];
-      for(offset=0; offset<7; offset++){
-        data[i].push (total(this.data(i, offset-6)));
+      for(index=0; index<7; index++){
+        data[i].push (total(this.data(i, index+offset-6)));
       }
       data[i].map((val, idx)=>{ sum[idx] += val;});
     }
     data.push(sum);
     return data;
   },
-  monthlyChartData: function(){
+  monthlyChartData: function(offset=0){
     var data = []; sum = Array(30).fill(0)
     for(i=0; i<Home.appliance.length; i++){
       data[i]=[];
-      for(offset=0; offset<30; offset++){
-        data[i].push (total(this.data(i, offset-29)));
+      for(index=0; index<30; index++){
+        data[i].push (total(this.data(i, index+offset-29)));
       }
       data[i].map((val, idx)=>{ sum[idx] += val;});
     }
@@ -233,14 +249,11 @@ var Appliance = {
 
 
 var Charts = {
-  init: function(){
+  inti:false,
+  activate: function(){
     this.updateView();
 
 
-
-    $('#chartView').html(`<option value="Home">Home</option>`);
-    Appliance.names().map(val => { $('#chartView').append(`<option value="${val}">${val}</option>`); })
-    $('#chartView').append(`<option value="compare">Compare</option>`);
 
 
 
@@ -263,129 +276,115 @@ var Charts = {
   },
   updateView: function(){
     var target = $('#chartDate').val().trim();
+    $('#chartView').html(`<option value="Home">Home</option>`);
+    Appliance.names().map(val => { $('#chartView').append(`<option value="${val}">${val}</option>`); })
+    $('#chartView').append(`<option value="compare">Compare</option>`);
+    var offset = Number($('#chartOffset').val());
+    this.offset=offset;
+    $('#chartOffset').html('');
+    var end = Appliance.oldest();
+
+    for (var i = 0; Time.log(i)!=end; i--) {
+      $('#chartOffset').append(`<option value="${i}" ${(offset==i ? 'selected':'') }>${Time.date(i)}</option>`);
+    }
+
+
+
     switch (target) {
       case 'thisDay':
-        this.renderChart(Appliance.dayChartData());
-        this.renderDonut(Appliance.dayChartData());
+        this.render(Appliance.dayChartData(offset));
         this.changeView();
         break;
         case 'thisWeek':
-        this.renderChart(Appliance.weeklyChartData());
-        this.renderDonut(Appliance.weeklyChartData());
+        this.render(Appliance.weeklyChartData(offset));
         this.changeView();
           break;
           case 'thisMonth':
-          this.renderChart(Appliance.monthlyChartData());
-          this.renderDonut(Appliance.monthlyChartData());
+          this.render(Appliance.monthlyChartData(offset));
           this.changeView();
             break;
       default:
     };
 
-
-
   },
 
-
-  renderDonut: function(data){
-      var log = {
-        total_consumption:'',
-        average_consumption:'',
-
-        peak_hours:'',
-        cost_per_watt:'',
-        estimated_cost:'',
-        most_used_appliance:'',
-        appliances:[],
-        consumption:[],
-
-
-      };
-      switch (data[data.length].length) {
-        case 24:
-
-          break;
+  offset:0,
+  render: function(data){
+    //Charts
+    var template = {
+        chart: { height: 350, type: System.data.chartType}, plotOptions: { bar: { horizontal: false, columnWidth: '77%', endingShape: 'flat'},},
+        dataLabels: { enabled: false }, stroke: {curve:'smooth', show: true, width: 0.7, colors: ['black']}, series: [],
+        xaxis: { categories: [], labels:{show:true, style:{fontSize:'9px'}}}, legend:{show:false},
+        theme:{monochrome:{enabled:true,}}, fill:{ colors: [ ()=> { var hexDigits = new Array ("0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"); rgb = $('li[selected]').css('color'); rgb = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/); hex='#'; for(i=1;i<=3;i++){ hex+=isNaN(rgb[i]) ? "00" : hexDigits[(rgb[i] - rgb[i] % 16) / 16] + hexDigits[rgb[i] % 16];} return hex;}, '#aaa']},
+        tooltip: { y: { formatter: function (val) { return "" + (val||0) + "W"}}}
+    }
+    var names = Appliance.names().concat(['Home']);
+    for (var i = 0; i < data.length; i++) {
+      template.series.push({name:names[i], data:data[i]});
+    }
+    switch (data[0].length) {
         case 7:
-
+        template.xaxis.categories  = Time.days(this.offset);
           break;
         case 30:
-
+          template.xaxis.categories = Time.range(this.offset-30,this.offset); template.xaxis.labels.show = false;
           break;
-        default:
+      default:
+      template.xaxis.categories = Time.hours;
+    }
+
+    if (typeof(Charts['chart'])=='undefined'){ Charts['chart'] = new ApexCharts( document.querySelector('#chart'), template ); Charts['chart'].render();}
+    else{Charts['chart'].updateOptions(template);}
+
+
+
+      //Donut
+
+      var log = {
+        Total_Consumption:0,
+        Cost_Per_Watt:0,
+        Average_Consumption:0,
+        Average_Electrical_Cost:0,
+        Total_Cost:'',
+        Most_Used_Appliance:'',
+        //appliances:[],
+        //consumption:[],
       };
+      log.Cost_Per_Watt = Number(System.data.cost);
+     data[data.length-1].map( (val) => { log.Average_Consumption += val/(data.length-1); } )
+     log.Average_Electrical_Cost = (log.Average_Consumption*log.Cost_Per_Watt)+  (data[data.length-1].length==24? ' pesos per hour':' pesos per day' );
+     log.Average_Consumption += (data[data.length-1].length==24? 'W per hour':'per day' );
 
 
+    for(i=0; i<data.length; i++){data[i]=(total(data[i]));}
 
-    for(i=0; i<data.length; i++){ data[i]=(total(data[i]));}
-    log.total_consumption = data.pop();
+    log.Total_Consumption = data.pop();
+    log.Total_Cost = log.Total_Consumption*log.Cost_Per_Watt;
+    var idx=0; var peak=0;
+    data.map((val,index)=>{ if(val>peak){ idx=index; peak=val;} })
+    log.Most_Used_Appliance = Home.appliance[idx].name;
+    log.Total_Cost+=' pesos';
+    $('#computations').html( '<header>Computations</header>')
+    $('#computations').append('<lu>');
+    Object.keys(log).map( val => { $('#computations').append( '<li>'+val.replace('_',' ').replace('_',' ') + ': ' + log[val] + '</li><br>');  } );
+    $('#computations').append('</lu>');
+
       var template = {
-        chart: { height: 350, type: 'donut', },
+        chart: { height: 400, type: 'donut', },
         stroke: {show: true, width: 0.7, colors: ['black']},
         series: data,
         xaxis: { categories: [], labels:{show:true}},
+        legend:{position:'bottom'},
         plotOptions:{pie:{donut:{labels:{show:true,total:{showAlways:true,show:true}}}}},
         labels:Appliance.names(),
         tooltip: { y: { formatter: function (val) { return "" + val + "W"}}}
     };
-
-    if (typeof(Charts['donut'])=='undefined'){
-      Charts['donut'] = new ApexCharts( document.querySelector('#donut'),template);
-      Charts['donut'].render();
-    }
-      else{
-      Charts['donut'].updateOptions(template);
-      }
+    if (typeof(Charts['donut'])=='undefined'){ Charts['donut'] = new ApexCharts( document.querySelector('#donut'),template); Charts['donut'].render(); }
+    else{ Charts['donut'].updateOptions(template);}
   },
-
-  renderChart:function(data){
-      var template = {
-          chart: { height: 350, type: System.data.chartType},
-          plotOptions: {
-              bar: { horizontal: false, columnWidth: '77%', endingShape: 'flat'},
-              },
-          dataLabels: { enabled: false },
-          stroke: {curve:'smooth', show: true, width: 0.7, colors: ['black']},
-          series: [],
-          xaxis: { categories: [], labels:{show:true, style:{fontSize:'9px'}}},
-          legend:{show:false},
-          theme:{monochrome:{enabled:true,}},
-          fill:{ colors: [ ()=> { var hexDigits = new Array ("0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"); rgb = $('li[selected]').css('color'); rgb = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/); hex='#'; for(i=1;i<=3;i++){ hex+=isNaN(rgb[i]) ? "00" : hexDigits[(rgb[i] - rgb[i] % 16) / 16] + hexDigits[rgb[i] % 16];} return hex;}, '#aaa']},
-          tooltip: { y: { formatter: function (val) { return "" + (val||0) + "W"}}}
-      }
-      var home = new Array(data[0].length).fill(0);
-      console.log(data);
-      for (var i = 0; i < data.length; i++) {
-        for(x=0; x<data[i].length; x++){
-          home[x]+=(data[i][x]||0);
-        }
-      }
-
-      var names = Appliance.names().concat(['Home']);
-      for (var i = 0; i < data.length; i++) {
-        template.series.push({name:names[i], data:data[i]});
-      }
-      switch (data[0].length) {
-          case 7:
-          template.xaxis.categories  = Time.days;
-            break;
-          case 30:
-            template.xaxis.categories = Time.range(-30,0); template.xaxis.labels.show = false;
-            break;
-        default:
-        template.xaxis.categories = Time.hours;
-      }
-
-      if (typeof(Charts['chart'])=='undefined'){
-        Charts['chart'] = new ApexCharts( document.querySelector('#chart'), template );
-        Charts['chart'].render(); //this.changeView();
-      }
-        else{
-        Charts['chart'].updateOptions(template);
-        }
-    },
+};
 
 
-}
 
 
 
@@ -419,15 +418,6 @@ function toggleSwitchRequest(target){
 // Settings Functions
 var System = {
   init: function(){
-    // Tab Functionalities
-    $('nav li').click(function(){
-      var target = $(this).index();
-        localStorage.setItem('tab', target);
-        $('body > header').each(function(i){ if(i==target){ $(this).attr('active', ''); return; } $(this).removeAttr('active');});
-        $('main section').each(function(i){if(i==target){ $(this).attr('active', ''); return; } $(this).removeAttr('active');});
-        $('nav li').each(function(i){if(i==target){ $(this).attr('selected', ''); return; } $(this).removeAttr('selected');});
-      });
-      $('nav li').eq(Number(localStorage.getItem('tab'))).trigger('click');
     // Pull
     var settings = JSON.parse(localStorage.getItem('settings'));
     if (settings==null){ this.save(); settings=JSON.parse(localStorage.getItem('settings')); };
@@ -438,6 +428,16 @@ var System = {
     $('.settings').on('change', function(event){ event.stopPropagation(); event.stopImmediatePropagation(); System.save(); });
     // Initialize
     System.exec();
+    // Tab Functionalities
+    $('nav li').click(function(){
+      var target = $(this).index();
+        localStorage.setItem('tab', target);
+        $('body > header').each(function(i){ if(i==target){ $(this).attr('active', ''); return; } $(this).removeAttr('active');});
+        $('main section').each(function(i){if(i==target){ $(this).attr('active', ''); return; } $(this).removeAttr('active');});
+        $('nav li').each(function(i){if(i==target){ $(this).attr('selected', ''); return; } $(this).removeAttr('selected');});
+        if(target==0){ Charts.activate();}
+      });
+      $('nav li').eq(Number(localStorage.getItem('tab'))).trigger('click');
   },data:{},
   save: function(){
     this.data = {
