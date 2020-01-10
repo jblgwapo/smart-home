@@ -25,7 +25,7 @@ z-index
   --background: #f0f0f0;
   --color: #3d3d3d;
   --accent:rgb(9,143,248);
-  --disabled:#777;
+  --disabled:#555;
   --token: #fefefe;/*linear-gradient(#fcfcfc,#f7f7f7);*/
   --line-color: #ffffff;
 
@@ -61,8 +61,8 @@ z-index
               --backdrop: rgba(0,0,0,0.5);
             }
 
-            body > header { background: linear-gradient(rgb(0,0,0,1), rgba(30,30,30,0.3)) !important; border-bottom: 1px solid #0f0f0f !important;}
-            body > nav { background: rgb(30,30,30,0.77) !important; border-top: 1px solid #0f0f0f; }
+            body > header { background: linear-gradient(rgb(0,0,0,1), rgba(0,0,0,0.3)) !important; border-bottom: 1px solid #0f0f0f !important;}
+            body > nav { background: rgb(0,0,0,0.77) !important; border-top: 1px solid #0f0f0f; }
             [graph]{ filter: invert() hue-rotate(180deg); color:black;}
 
 
@@ -86,7 +86,7 @@ body { top:0; left: 0; right: 0; bottom: 0;
        /*scroll-snap-type: y proximity; /* set to mandatory to force scroll in contrary to proximity*/
        scroll-behavior: smooth;
        scroll-padding: 3.7em; scroll-snap-padding: 3.7em;
-      } body::-webkit-scrollbar { width: 0 !important; background: transparent;}
+      } body::-webkit-scrollbar { width: 0 !important; background: transparent !important;}
         [active]{ display: block; }
 
 
@@ -113,9 +113,9 @@ nav { position: fixed;
                }
                nav li { cursor: pointer;  font-size: 60%; color:var(--disabled) !important; width: 100%;}
                       nav li[selected]{ color:var(--accent) !important; }
-                      nav svg{ height: 25px; width: 25px;}
+                      nav svg{ height: 30px; width: 35px;}
 
-main { height: 100vh; width: 100%;
+main { height: auto; width: 100%;
        margin: 4em auto;
       }
       section {  width: 100%; display: none;}
@@ -172,7 +172,7 @@ main { height: 100vh; width: 100%;
 @media screen and (min-width:320px) {
   :root { --radius: 1em; }
   body > header[active] {
-                   padding-top: 0.5em;
+                   padding-top: 1vh;
                    padding-left:4%;
                    font-size: 1.7em;
                    -webkit-backdrop-filter: blur(50px); backdrop-filter: blur(10px);
@@ -180,7 +180,7 @@ main { height: 100vh; width: 100%;
   main { position: relative; width: 100vw; padding-bottom: 30vh;
       } main::-webkit-scrollbar { width: 0 !important }
   nav{ bottom: 0; left:0; right:0;
-       padding-bottom: 3vh; padding-top: 0.3em;
+       padding-bottom: 1vh; padding-top: 0.3em;
        width: 100vw; text-align: center;
       }
       nav li {  width: 20%;
@@ -191,9 +191,17 @@ main { height: 100vh; width: 100%;
 
   section{ width: 93vw; margin: auto; padding-bottom: 17vh;}
   article{ width: 100%; margin-bottom:1em ;}
-
-
 }
+
+/* iPhone Xs */
+@media only screen and (device-width : 375px) and (device-height : 812px) and (-webkit-device-pixel-ratio : 3) {
+      nav{padding-bottom: 3vh;}
+      body>header[active]{padding-top: 3vh;}
+     }
+
+
+
+
 /* Tablet */
 @media screen and (min-width:768px) {
   :root { --radius: 0.5em; }

@@ -3,32 +3,65 @@ $(document).ready(function(){
   console.log(btoa('jale\''));
 console.log(atob(''));
   // Setup Infos
+
+  const isIos = () => {
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    return /iphone|ipad|ipod/.test( userAgent );
+  }
+  // Detects if device is in standalone mode
+  const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
+
+  // Checks if should display install popup notification:
+  if (isIos() && !isInStandaloneMode()) {
+    $('body').html('');
+    Modal.slide('Install the app first', 'The app must be installed first before you can run it.');  return;
+  }
+
   var data = JSON.parse(localStorage.getItem('credentials'));
-  if( data==null ){ Modal.slide('Let\'s Get Started.','User Name:<input type="text" id="_username"><br>Home Serial Key<input type="text" id="_home-serial"><br><button onclick="SmartHomeSetup()">Submit</button>', 'Modal.alert(\'Please Complete the details\')'); return;}
+  if( data==null ){ Modal.slide('Let\'s Get Started.','User Name:<input type="text" id="_username"><br>Home Serial Key<input type="text" id="_home-serial"><br><button onclick="System.setup()">Submit</button>', 'Modal.alert(\'Please Complete the details\')'); return;}
     $('#username').val(data.username); $('#serial').val(data.serial);
 
 
 System.init();
 Appliance.init();
+Charts.init();
   // Graphs
 
 
 
 
 
-console.log(Appliance.weeklyChartData(-1));
+//console.log(Appliance.weeklyChartData(-1));
 
 
 // TEst
+/*
+var asd = new WebSocket('wss://smart-home.local:443');
 
+
+
+asd.onerror = function(e) {console.log(e);};
+
+asd.onmessage = function(message){ console.log(message.data);  }
+asd.onopen = (e)=>{
+  asd.send('data');
+  asd.send('{"hello":"server"}');
+}
+*/
+
+
+
+
+
+
+
+//end test
 console.log(navigator.onLine);
-
-
-
-
-
-// test end
 });
+
+
+
+
 const total = arr => arr.reduce((a,b) => a + b, 0);
 
 
@@ -38,7 +71,11 @@ var Time = {
   log: function(index=0){
     date = new Date;
     date.setDate(date.getDate() + index);
-    return 'log'+Number(date.getMonth()+1)+date.getDate()+Number(1900+date.getYear());
+    var y = 1900+date.getYear();
+    var m = (date.getMonth()+1);
+    var d = date.getDate();
+
+    return `log${y}${(m<10 ? '0'+m : m)}${(d<10 ? '0'+d : d)}`;
   },
   date: function(index=0){
     date = new Date;
@@ -68,34 +105,56 @@ var Time = {
 
 
 
+ var Manager = {
+   init: function(){
+     var queue = localStorage.getItem('queue');
+     try {
+       queue = JSON.parse(queue);
+       if(queue==null){queue=[]};
+     } catch (e) {
+       queue = [];
+     } finally {
+       this.queue = queue;
+       localStorage.setItem('queue', JSON.stringify(this.queue));
+     }
+
+     
 
 
-// Setup Functions
-function SmartHomeSetup(){
-  var username = $('#_username').val();
-  var serial = $('#_home-serial').val();
-  localStorage.setItem('credentials', JSON.stringify({username:username, serial:serial}));
-  location.reload();
-};
+
+
+   },
+
+   pushData: function(data){
+     this.queue.push(data);
+     localStorage.setItem('queue', JSON.stringify(this.queue));
+   },
+   queue:[],
+
+
+
+
+
+ };
+
 
 
 
 // All Data about the home. Format in here
-
-
+// Warning False Values are used as a placeholder
 var Home = {
   appliance:[
     {
     name:'Refrigerator', /* User Defined */
     type:'switch',
     status:'on', /* Remote */
-    serial:'@#4as',
-    automation:[1230,0730],
+    serial:'@#4as', /* NRF serial key mockup */
+    automation_enabled:true, /* Automation is active */
+    automation:['12:30 AM','12:00 PM'], /* Automation Time when active */
     consumption:{
-      log12282019:[10,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12],
-      log12262019:[100,20,30,40,50,60,70,10,123,321,123,23],
-      log12252019:[21,23,54,65,23,76,98,122,89,21,34,78],
-      log12242019:[45,32,45,76,89,32,12,65,34,87,90,100],
+      /* Format: log year month day : logYYYYMMDD   */
+      /* 24 hour format / hourly data for an appliance */
+      log20200109:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123},
      }
     },
     {
@@ -103,48 +162,56 @@ var Home = {
     type:'switch',
     status:true, /* Remote */
     serial:'rocks',
-    timer:'off',
+    automation_enabled:false,
+    automation:['07:00 PM','03:00 AM'],
     consumption:{
-      log12282019:[45,32,45,76,89,32,12,65,34,87,90,100],
-      log12262019:[32,45,67,98,123,0,0,0,0,0,0,53,12,78,56,90,123,10],
-      log12252019:[45,32,45,76,89,32,12,65,34,87,90,100],
-      log12242019:[32,45,67,98,123,53,12,78,56,90,123,10],
+      log20200109:{data:[23,45,56,45,34,50,40,23,20,10,43,43,43,23,3,12], total:123},
      }
    },{
    name:'Fan', /* User Defined */
    type:'switch',
    status:true, /* Remote */
    serial:'staph',
-   timer:'off',
+   automation_enabled:false,
+   automation:['',''], /* Default Automation time */
    consumption:{
-     log12282019:[32,45,67,98,123,53,12,78,56,90,123,10],
-     log12262019:[232,45,90,70,55,100,43,90,65,9,100,120,232,45,90,70,55,100,43,90,65,9,100,120],
-     log12252019:[45,32,45,76,89,32,12,65,34,87,90,100],
-     log12242019:[32,45,67,98,123,53,12,78,56,90,123,10],
+     log20200109:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123},
     }
   },{
   name:'Lights', /* User Defined */
   type:'switch',
   status:true, /* Remote */
   serial:'oleds',
-  timer:'off',
+  automation_enabled:false,
+  automation:['',''],
   consumption:{
-    log12262019:[0,0,0,0,0,12,21,43,34,32,1,54,56,87,78,67,10],
-    log12252019:[45,32,45,76,89,32,12,65,34,87,90,100],
-    log12242019:[32,45,67,98,123,53,12,78,56,90,123,10],
+    log20200109:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123},
    }
   }
 ],
 
+
+// Home Power Consumption
+/* same as appliance but uses the total value of all appliance */
+consumption:{
+    log20200109:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123}
+},
+
+
+/* camera object */
 camera:[{
   name:'ESP CAM',
   lightsCapable:'yes',
   serial:'Qa!e6',
   socket:'wss://6b1c4d39.jp.ngrok.io/wss'
 }],
-
-
 };
+
+
+
+
+
+
 
 
 
@@ -155,23 +222,23 @@ camera:[{
 
 var Appliance = {
   init: function(){
-    hours=''; minutes='';
-    for(i=0;i<=12;i++){
-      hours+='<option value="'+(i*100)+'">'+i+'</option>';
-    }
-    for(i=0;i<60;i++){
-      minutes+='<option value="'+(i*100)+'">'+i+'</option>';
-    }
 
+    $('#appliances').html('');
     for(i=0; i<Home.appliance.length; i++){
       var appliance =
       `<article><header>${Home.appliance[i].name}
       <label class="switch"><input type="checkbox" ${(Home.appliance[i].status=='on'?'checked':'')}><span class="slider"></span></label></header>
       <lu><li>Serial Key: ${btoa(Home.appliance[i].serial).replace('=','')}</li>
       <li>Type: ${Home.appliance[i].type}</li>
-      <li>Automation:<br><select class="third">${hours}</select> <select class="third">${minutes}</select> <select class="third"><option>AM</option><option>PM</option></select></li>
-      <li>Consumption: ${this.consumption(i)} Watts today</li>
-      </lu></article>`;
+      <li>Consumption: ${'sample'} Watts today</li><br>
+      <li>Automation: ${(Home.appliance[i].automation_enabled ? 'enabled' : 'disabled')}<br>
+      <button onclick="Appliance.configure('${(Home.appliance[i].serial)}')" style=" font-size:0.7em;">Configure</button>
+      </li>
+      <li>Turn on every: ${(Home.appliance[i].automation_enabled ? Home.appliance[i].automation[1] : 'disabled')}</li>
+      <li>Turn off every: ${(Home.appliance[i].automation_enabled ? Home.appliance[i].automation[0] : 'disabled')}</li>
+      </lu><br>
+
+      </article>`;
       $('#appliances').append(appliance);
     }
     for(i=0; i<Home.camera.length;i++){
@@ -183,7 +250,7 @@ var Appliance = {
       $('#camera').append(camera);
 
     }
-
+    this.updateData();
   },
   names: function(){
     var name = [];
@@ -192,196 +259,224 @@ var Appliance = {
     }
     return name;
   },
+  data:function(samples=1,offset=0){
+    // Container
+    data = {log:[], total:[], daily:[]};
+    // loop through samples needed\
+
+    offset = 0-offset;
+    console.log('Time: ' + Time.log(-0-offset)+':'+Home.consumption.hasOwnProperty(Time.log(-0-offset)));
+    //Home
+    var log=[]; var total = 0; var daily =[];
+    for (var i = 0; i < samples; i++) {
+
+      if(!Home.consumption.hasOwnProperty(Time.log(-i-offset))){ log.push([0]); daily.push(0); continue}
+      log.push(Home.consumption[Time.log(-i-offset)].data);
+       daily.push(Home.consumption[Time.log(-i-offset)].total);
+    }
+    data.log.push(log); data.daily.push(daily);
+    console.log(data);
+    log=[]; daily=[];
+    //Each appliance
+    Home.appliance.map(val=>{
+      for (var i = 0; i < samples; i++) {
+        if(!Home.consumption.hasOwnProperty(Time.log(-i-offset))){ log.push([0]);daily.push(0); continue}
+         log.push(val.consumption[Time.log(-i-offset)].data);
+         daily.push(val.consumption[Time.log(-i-offset)].total);
+         total+=(val.consumption[Time.log(-i-offset)].total);
+      }
+      data.log.push(log); data.total.push(total); data.daily.push(daily);
+      console.log(data);
+      log=[];total=0;
+    });
+    console.log(data);
+      return data;
+  },
+
   oldest: function(){
     var dates = [];
     for(i=0;i<Home.appliance.length;i++){
-      Object.keys(Home.appliance[i].consumption).map(val=>{dates.push(val)});
+      dates = dates.concat(Object.keys(Home.appliance[i].consumption))
     }
     dates.sort()
+    if(dates[0]==null) return [Time.log()];
     return dates[0];
   },
-  data: function(index, offset=0){ /* Hourly data of an appliance for a selected day: Select day using offset, returns an array */
-    temp =  Home.appliance[index].consumption[Time.log(offset)];
-    return (temp==null? [0]: temp);
-  },
-  consumption: function(index, offset=0){
-    return total(this.data(index,offset));
-  },
 
-  dayChartData: function(offset=0){
-    var data=[]; var sum = Array(24).fill(0);
-
-    for(i=0; i<Home.appliance.length; i++){
-      data[i]=(this.data(i, offset));
-      data[i].map((val, idx)=>{ sum[idx] += val;});
+  configure: function(serial){
+    var appliance;
+    var hours=''; var minutes='';
+    for(i=1;i<=12;i++){
+      hours+='<option value="'+(i<10 ? '0'+ i:i )+'">'+(i<10 ? '0'+ i:i )+'</option>';
     }
-    data.push(sum);
-    return data;
-  },
+    for(i=0;i<60;i++){
+      minutes+='<option value="'+(i<10 ? '0'+ i:i )+'">'+(i<10 ? '0'+ i:i )+'</option>';
+    }
+    Home.appliance.map( val =>{ if(val.serial==serial) appliance=val; })
+    Modal.alert( `<b style="font-size:1.5em;">${appliance.name}</b><br><br>
+      Automation:
+      <select id="_automation_enabled" onchange="Appliance.updateConfig('${appliance.serial}')">
+      <option value="on">Enabled</option>
+      <option value="off" ${((appliance.automation_enabled==false)? 'selected':'')}>Disabled</option>
+      </select>
 
-  weeklyChartData: function(offset=0){
-    var data = []; sum = Array(7).fill(0)
-    for(i=0; i<Home.appliance.length; i++){
-      data[i]=[];
-      for(index=0; index<7; index++){
-        data[i].push (total(this.data(i, index+offset-6)));
+      Turn On time:<br>
+      <select class="third" id="_on_hour">${hours}</select onchange="Appliance.updateConfig('${appliance.serial}')"> :
+      <select class="third" id="_on_min">${minutes}</select onchange="Appliance.updateConfig('${appliance.serial}')">
+      <select class="third" id="_on_label" onchange="Appliance.updateConfig('${appliance.serial}')"><option value="AM">AM</option><option value="PM">PM</option></select><br>
+
+      Turn Off time:<br>
+      <select class="third" id="_off_hour">${hours}</select onchange="Appliance.updateConfig('${appliance.serial}')"> :
+      <select class="third" id="_off_min">${minutes}</select onchange="Appliance.updateConfig('${appliance.serial}')">
+      <select class="third" id="_off_label" onchange="Appliance.updateConfig('${appliance.serial}')"><option value="AM">AM</option><option value="PM">PM</option></select><br>
+      `);
+      console.log('Time'+appliance.automation[0].slice(6,9));
+      $('#_on_hour').val(appliance.automation[1].slice(0,2));
+      $('#_on_min').val(appliance.automation[1].slice(3,5));
+      $('#_on_label').val(appliance.automation[1].slice(6,9));
+
+      $('#_off_hour').val(appliance.automation[0].slice(0,2));
+      $('#_off_min').val(appliance.automation[0].slice(3,5));
+      $('#_off_label').val(appliance.automation[0].slice(6,9));
+
+
+  },
+  // Apps
+  updateConfig:function(serial){
+    Home.appliance.map( val =>{
+      console.log((val.serial==serial));
+      if(val.serial==serial) {
+        val.automation_enabled = String($('#_automation_enabled').val());
+        val.automation[0] = `${$('#_off_hour').val()}:${$('#_off_min').val()} ${$('#_off_label').val()}`;
+        val.automation[1] = `${$('#_on_hour').val()}:${$('#_on_min').val()} ${$('#_on_label').val()}`;
+        console.log(val);
       }
-      data[i].map((val, idx)=>{ sum[idx] += val;});
-    }
-    data.push(sum);
-    return data;
-  },
-  monthlyChartData: function(offset=0){
-    var data = []; sum = Array(30).fill(0)
-    for(i=0; i<Home.appliance.length; i++){
-      data[i]=[];
-      for(index=0; index<30; index++){
-        data[i].push (total(this.data(i, index+offset-29)));
-      }
-      data[i].map((val, idx)=>{ sum[idx] += val;});
-    }
-    data.push(sum);
-    return data;
+    });
 
+    this.updateData();
   },
-
+  updateData: function(){
+    Manager.pushData(Home);
+  },
 }
 
 
 var Charts = {
-  inti:false,
-  activate: function(){
-    this.updateView();
-
-
-
-
-
-
-
-  },
-  changeView: function(){
-    series = (Appliance.names()); series.push('Home');
-    var target = $('#chartView').val();
-
-    if(target=='compare'){
-      for(i=0; i<series.length;i++){ if(series[i]=='Home'){Charts['chart'].hideSeries(series[i]); continue}; Charts['chart'].showSeries(series[i]);
-    }
-      return;
-    }
-    for(i=0; i<series.length;i++){
-      if (series[i]==target) {Charts['chart'].showSeries(series[i]); continue}
-      Charts['chart'].hideSeries(series[i]);
-    }
-  },
-  updateView: function(){
-    var target = $('#chartDate').val().trim();
-    $('#chartView').html(`<option value="Home">Home</option>`);
-    Appliance.names().map(val => { $('#chartView').append(`<option value="${val}">${val}</option>`); })
-    $('#chartView').append(`<option value="compare">Compare</option>`);
-    var offset = Number($('#chartOffset').val());
-    this.offset=offset;
-    $('#chartOffset').html('');
-    var end = Appliance.oldest();
-
-    for (var i = 0; Time.log(i)!=end; i--) {
-      $('#chartOffset').append(`<option value="${i}" ${(offset==i ? 'selected':'') }>${Time.date(i)}</option>`);
-    }
-
-
-
-    switch (target) {
-      case 'thisDay':
-        this.render(Appliance.dayChartData(offset));
-        this.changeView();
-        break;
-        case 'thisWeek':
-        this.render(Appliance.weeklyChartData(offset));
-        this.changeView();
-          break;
-          case 'thisMonth':
-          this.render(Appliance.monthlyChartData(offset));
-          this.changeView();
-            break;
-      default:
-    };
+  //chartView chartDate chartOffset
+  init: function(){
+    var chartView = $('#chartView').on('change', function() {
+      Charts.select();
+    });
+    var chartDate = $('#chartDate').on('change', function() {
+      Charts.render();
+    });
+    var chartOffset = $('#chartOffset').on('change', function() {
+      Charts.render();
+    });
 
   },
 
-  offset:0,
-  render: function(data){
-    //Charts
-    var template = {
+  render:async function(){
+    // get values as a draft
+    var chartView = $('#chartView').val();
+    var chartDate = $('#chartDate').val();
+    var chartOffset = $('#chartOffset').val();
+    // defaults
+    var chartViewSelected = (chartView=='no_data' ? 'Home' : chartView)
+    var chartDateSelected = (chartDate=='no_data' ? 'Today' : chartDate)
+    var chartOffsetSelected = (chartOffset=='no_data' ? 0 : Number(chartOffset))
+    // create select list from data
+    //Appliances
+    var appliance = ['Home'].concat(Appliance.names()).concat(['Compare']);
+    var temp='';
+    appliance.map(val => { temp+=`<option value="${val}" ${(val==chartViewSelected ? 'selected': '' )}>${val}</option>`});
+    $('#chartView').html(temp);
+    // View
+    var options = ['Today', 'Weekly','Monthly'];
+    var temp='';
+    options.map(val => { temp+=`<option value="${val}" ${(val==chartDateSelected ? 'selected': '' )}>${val}</option>`})
+    $('#chartDate').html(temp);
+    // Dates list
+    var temp='';
+    var limit = Appliance.oldest();
+    for (var i = 0; i > -30; i--) {
+      var stamp = Time.log(i);
+      temp+=`<option value="${i}" ${(i==chartOffsetSelected ? 'selected': '' )}>${Time.date(i)}</option>`;
+      if(stamp==limit) {console.log(stamp);break;}
+    }
+    $('#chartOffset').html(temp);
+    // Generate data using date and offset
+    console.log(chartOffsetSelected);
+    var data =  Appliance.data(1,Number(chartOffsetSelected));
+    console.log('Append Data: '+JSON.stringify(data));
+    // Main chart
+    var main = {
         chart: { height: 350, type: System.data.chartType}, plotOptions: { bar: { horizontal: false, columnWidth: '77%', endingShape: 'flat'},},
         dataLabels: { enabled: false }, stroke: {curve:'smooth', show: true, width: 0.7, colors: ['black']}, series: [],
         xaxis: { categories: [], labels:{show:true, style:{fontSize:'9px'}}}, legend:{show:false},
         theme:{monochrome:{enabled:true,}}, fill:{ colors: [ ()=> { var hexDigits = new Array ("0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"); rgb = $('li[selected]').css('color'); rgb = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/); hex='#'; for(i=1;i<=3;i++){ hex+=isNaN(rgb[i]) ? "00" : hexDigits[(rgb[i] - rgb[i] % 16) / 16] + hexDigits[rgb[i] % 16];} return hex;}, '#aaa']},
         tooltip: { y: { formatter: function (val) { return "" + (val||0) + "W"}}}
     }
-    var names = Appliance.names().concat(['Home']);
-    for (var i = 0; i < data.length; i++) {
-      template.series.push({name:names[i], data:data[i]});
+    for (var i = 0; i < appliance.length-1; i++) {
+      main.series.push({name:appliance[i], data:data.log[i][0]});
     }
-    switch (data[0].length) {
-        case 7:
-        template.xaxis.categories  = Time.days(this.offset);
-          break;
-        case 30:
-          template.xaxis.categories = Time.range(this.offset-30,this.offset); template.xaxis.labels.show = false;
-          break;
-      default:
-      template.xaxis.categories = Time.hours;
-    }
+    console.log(JSON.stringify(main.series));
+    main.xaxis.categories = Time.hours;
+    setTimeout(
+      function(){
+        if (typeof(Charts['chart'])=='undefined'){ Charts['chart'] = new ApexCharts( document.querySelector('#chart'), main ); Charts['chart'].render();}
+        else{ Charts['chart'].updateOptions(main);}
+        Charts.select();
+      }
+    ,50);
 
-    if (typeof(Charts['chart'])=='undefined'){ Charts['chart'] = new ApexCharts( document.querySelector('#chart'), template ); Charts['chart'].render();}
-    else{Charts['chart'].updateOptions(template);}
-
-
-
-      //Donut
-
-      var log = {
-        Total_Consumption:0,
-        Cost_Per_Watt:0,
-        Average_Consumption:0,
-        Average_Electrical_Cost:0,
-        Total_Cost:'',
-        Most_Used_Appliance:'',
-        //appliances:[],
-        //consumption:[],
+    //Donut chart
+    console.log(data.total);
+    var template = {
+      chart: { height: 400, type: 'donut', },
+      stroke: {show: true, width: 0.7, colors: ['black']},
+      series: data.total,
+      xaxis: { categories: [], labels:{show:true}},
+      legend:{position:'bottom'},
+      plotOptions:{pie:{donut:{labels:{show:true,total:{showAlways:true,show:true}}}}},
+      labels:Appliance.names(),
+      tooltip: { y: { formatter: function (val) { return "" + val + "W"}}}
       };
-      log.Cost_Per_Watt = Number(System.data.cost);
-     data[data.length-1].map( (val) => { log.Average_Consumption += val/(data.length-1); } )
-     log.Average_Electrical_Cost = (log.Average_Consumption*log.Cost_Per_Watt)+  (data[data.length-1].length==24? ' pesos per hour':' pesos per day' );
-     log.Average_Consumption += (data[data.length-1].length==24? 'W per hour':'per day' );
+      setTimeout(
+        function(){
+          if (typeof(Charts['donut'])=='undefined'){ Charts['donut'] = new ApexCharts( document.querySelector('#donut'),template); Charts['donut'].render(); }
+          else{ Charts['donut'].updateOptions(template);}}
+      ,100);
+      //End of donut
+
+      // Computations
+      log = {
 
 
-    for(i=0; i<data.length; i++){data[i]=(total(data[i]));}
 
-    log.Total_Consumption = data.pop();
-    log.Total_Cost = log.Total_Consumption*log.Cost_Per_Watt;
-    var idx=0; var peak=0;
-    data.map((val,index)=>{ if(val>peak){ idx=index; peak=val;} })
-    log.Most_Used_Appliance = Home.appliance[idx].name;
-    log.Total_Cost+=' pesos';
-    $('#computations').html( '<header>Computations</header>')
-    $('#computations').append('<lu>');
-    Object.keys(log).map( val => { $('#computations').append( '<li>'+val.replace('_',' ').replace('_',' ') + ': ' + log[val] + '</li><br>');  } );
-    $('#computations').append('</lu>');
-
-      var template = {
-        chart: { height: 400, type: 'donut', },
-        stroke: {show: true, width: 0.7, colors: ['black']},
-        series: data,
-        xaxis: { categories: [], labels:{show:true}},
-        legend:{position:'bottom'},
-        plotOptions:{pie:{donut:{labels:{show:true,total:{showAlways:true,show:true}}}}},
-        labels:Appliance.names(),
-        tooltip: { y: { formatter: function (val) { return "" + val + "W"}}}
-    };
-    if (typeof(Charts['donut'])=='undefined'){ Charts['donut'] = new ApexCharts( document.querySelector('#donut'),template); Charts['donut'].render(); }
-    else{ Charts['donut'].updateOptions(template);}
+      }
   },
+  select: function(){
+    // get values as a draft
+    var chartView = $('#chartView').val();
+    // defaults
+    var chartViewSelected = (chartView=='no_data' ? 'Home' : chartView)
+
+    var series = ['Home'].concat(Appliance.names());
+
+    if(chartViewSelected=='Compare'){
+      for(i=0; i<series.length;i++){ if(series[i]=='Home'){Charts['chart'].hideSeries(series[i]); continue}; Charts['chart'].showSeries(series[i]);
+    }
+      return;
+    }
+    for(i=0; i<series.length;i++){
+      if (series[i]==chartViewSelected) {Charts['chart'].showSeries(series[i]); continue}
+      this['chart'].hideSeries(series[i]);
+    }
+  },
+
+
+
 };
 
 
@@ -389,19 +484,7 @@ var Charts = {
 
 
 
-//Appliance Functions
-function toggleSwitchRequest(target){
-  event.preventDefault();
-  if(!navigator.onLine) {console.log('Youre offline' + navigator.onLine); return;}
-  var toggle = Number($(`#${target}`).prop('checked'));
-  console.log(toggle);
-  requestUrl = `/toggle.php?toggle=${target}&value=${toggle}`
-  var xmlHttp = new XMLHttpRequest();
-  xmlHttp.open( "POST", requestUrl, false ); // false for synchronous request
-  xmlHttp.send( null );
-  console.log('response: ' + xmlHttp.responseText + Boolean(xmlHttp.responseText));
-  $(`#${target}`).prop('checked', Boolean(xmlHttp.responseText));
-}
+
 
 
 
@@ -417,6 +500,13 @@ function toggleSwitchRequest(target){
 
 // Settings Functions
 var System = {
+  setup: function(){
+    var username = $('#_username').val();
+    var serial = $('#_home-serial').val();
+    localStorage.setItem('credentials', JSON.stringify({username:username, serial:serial}));
+    location.reload();
+  },
+
   init: function(){
     // Pull
     var settings = JSON.parse(localStorage.getItem('settings'));
@@ -435,7 +525,7 @@ var System = {
         $('body > header').each(function(i){ if(i==target){ $(this).attr('active', ''); return; } $(this).removeAttr('active');});
         $('main section').each(function(i){if(i==target){ $(this).attr('active', ''); return; } $(this).removeAttr('active');});
         $('nav li').each(function(i){if(i==target){ $(this).attr('selected', ''); return; } $(this).removeAttr('selected');});
-        if(target==0){ Charts.activate();}
+        if(target==0){ setTimeout(function(){Charts.render()},50);}
       });
       $('nav li').eq(Number(localStorage.getItem('tab'))).trigger('click');
   },data:{},
@@ -444,7 +534,6 @@ var System = {
       theme:$('#theme').val(),
       chartType:$('#chartType').val(),
       cost:$('#cost').val(),
-
     }
     console.log(this.data);
     localStorage.setItem('settings',JSON.stringify(this.data));
@@ -462,8 +551,24 @@ var System = {
       if($('#chart').html().trim()=='') return;
     location.reload();
     }
-
-  }, //End of methods
+  },
+  update: function(){
+    caches.keys().then(function(cacheNames) {
+      return Promise.all(
+        cacheNames.filter(function(cacheName) {
+          return true;
+          // Return true if you want to remove this cache,
+          // but remember that caches are shared across
+          // the whole origin
+        }).map(function(cacheName) {
+          return caches.delete(cacheName);
+        })
+      );
+    })
+  location.reload();
+  console.log('Reload');
+  },
+  //End of methods
 
 };
 
@@ -480,7 +585,7 @@ var Modal = {
     var id = Modal.count; Modal.count++;
     //Animate
     $('#modal-'+id).animate( {opacity:'1'}, 100, function(){
-      $('#container-'+id).animate( {maxHeight:'50vh', maxWidth:'700px'}, 100,);
+      $('#container-'+id).animate( {maxHeight:'80vh', maxWidth:'700px'}, 100,);
     });
   },
 
@@ -523,7 +628,7 @@ var Modal = {
     var id = Modal.count; Modal.count++;
     //Animate
     $('#modal-'+id).animate( {opacity:'1'}, 100, function(){
-      $('#container-'+id).animate( {marginTop:'9vh'}, 100).animate( {marginTop:'10vh'}, 100);
+      $('#container-'+id).animate( {marginTop:'4vh'}, 100).animate( {marginTop:'5vh'}, 100);
     });
 
   },
@@ -535,7 +640,7 @@ var Modal = {
 
   },
   slideOut: function(id){
-    $('#container-'+id).animate( {marginTop:'9vh'}, 100).animate( {marginTop:'100vh'}, 150, function(){
+    $('#container-'+id).animate( {marginTop:'4vh'}, 100).animate( {marginTop:'100vh'}, 150, function(){
       $('#modal-'+id).animate( {opacity:'0'}, 100).remove();
     });
   }
