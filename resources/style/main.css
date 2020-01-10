@@ -160,7 +160,9 @@ main { height: auto; width: 100%;
                       font-size: 1em; background: var(--background); color: inherit;
                       -webkit-appearance:none; }
 
+                      #computations table {width: 100%;}
 
+                      #computations td{ padding-top: 10px; width: 40%; vertical-align: top;}
 
 
 
