@@ -27,7 +27,7 @@ Appliance.init();
 Charts.init();
   // Graphs
 
-Manager.init();
+Socket.init();
 
 
 
@@ -100,12 +100,20 @@ var Time = {
   },
   months:['Jan ','Feb ','Mar ','Apr ','May ','Jun ','Jul ','Aug ','Sep ','Oct ','Nov ','Dec '],
   day:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
-  hours: ['1:00 AM','2:00 AM','3:00 AM','4:00 AM','5:00 AM','6:00 AM','7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 NN','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM','7:00 PM','8:00 PM','9:00 PM','10:00 PM','11:00 PM','12:00 AM' ],
+  hours: function(i){
+    return ['1:00 AM','2:00 AM','3:00 AM','4:00 AM','5:00 AM','6:00 AM','7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 NN','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM','7:00 PM','8:00 PM','9:00 PM','10:00 PM','11:00 PM','12:00 AM' ].splice(0,i);
+  },
 }
 
 
 
- var Manager = {
+ var Socket = {
+   status:{
+     Local:{isOnline:false, token:null},
+     Global:{isOnline:false, token:null},
+   },
+   Local:{ /* Local placeholder */},
+   Global:{ /* Global placeholder */},
    init: function(){
      var queue = localStorage.getItem('queue');
      try {
@@ -117,23 +125,104 @@ var Time = {
        this.queue = queue;
        localStorage.setItem('queue', JSON.stringify(this.queue));
      }
-
-     this.Socket = new WebSocket('wss://smart-home.local:443');
-
-
-
-     this.Socket.onerror = function(e) {console.log(e);};
-
-     this.Socket.onmessage = function(message){ console.log(message.data);  }
-     this.Socket.onopen = (e)=>{
-       console.log('Local is online');
-     this.Socket.send('data');
-     this.Socket.send('{"hello":"server"}');
-   }
-
+     //Init sockets
+     this.localHander();
 
 
    },
+   localHander: function(){
+     // Local Setup
+     var Local = new WebSocket('wss://smart-home.local:443');
+     Local.onerror = function(e) {
+     };
+     Local.onmessage = function(message){
+       //console.log(message.data);
+       //Callback on wrong server
+       try {
+        var server_request = JSON.parse(message.data);
+       } catch (e) {
+         Local.close();
+         console.log('Server does not comply to standards: ' + JSON.stringify(message.data));
+         return;
+       }
+       //Callback on server error
+
+       if(!server_request.hasOwnProperty('status')&& !server_request.hasOwnProperty('type')){
+         console.log('Rejected Message From Server');
+         console.log('Message: ' + message);
+         return; }
+
+
+       var user_request = Socket.handler(server_request);
+       // Request verification
+       if(typeof(user_request)=='object') Local.send(JSON.stringify(user_request));
+     }
+     Local.onopen = (e)=>{
+       console.log('Local is online');
+       this.status.Local==true;
+     }
+
+       // Disconnection
+     Local.onclose = function(e) {
+      console.log('Local is offline. Reconnect will be attempted in 1 second.', e.reason);
+      setTimeout(function() {
+          Socket.localHander();
+        }, 1000);
+      };
+    Local.onerror = function(err) {
+        console.error('Local encountered error: ', err.message, 'Closing Local');
+        Local.close();
+        return;
+      }
+   },
+   handler: function(server_request, type='Local'){
+     var user_request ='';
+     switch (server_request.type) {
+       case 'handshake':
+          // Get serial
+          var key = JSON.parse(localStorage.getItem('credentials')).serial;
+          //Send Serial
+          var user_request = {
+            type:'serial',
+            key:key
+          };
+         break;
+       case 'acknowledge':
+           if(server_request.status=='Local'){ Socket.status.Local.token = server_request.token }
+           if(server_request.status=='Global'){ Socket.status.Global.token = server_request.token }
+           user_request['status']='OK';
+           var user_request={
+             type:'fetch',
+             status:Socket.status[type].token
+           }
+       break;
+      case 'data':
+          //fetch response
+          if(server_request.status=='No data')return;
+          try {
+            Home = server_request.status; //JSON.parse(server_request.status)
+          } catch (e) {
+            console.log('Data parse error: ' + e);
+            console.log(server_request.status);
+            return;
+          }
+          //console.log(JSON.stringify(server_request));
+          localStorage.setItem('Home', JSON.stringify(Home) );
+          console.log('New Data');
+          Charts.render();
+          Appliance.init()
+        break;
+      case 'remove':
+
+        break;
+
+       default: return;
+     }
+     console.log('Message to server:' + JSON.stringify(user_request));
+    return user_request;
+   },
+
+
 
    pushData: function(data){
      this.queue.push(data);
@@ -164,7 +253,7 @@ var Home = {
     consumption:{
       /* Format: log year month day : logYYYYMMDD   */
       /* 24 hour format / hourly data for an appliance */
-      log20200109:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123},
+      log20200111:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123},
      }
     },
     {
@@ -175,7 +264,7 @@ var Home = {
     automation_enabled:false,
     automation:['07:00 PM','03:00 AM'],
     consumption:{
-      log20200109:{data:[23,45,56,45,34,50,40,23,20,10,43,43,43,23,3,12], total:123},
+      log20200111:{data:[23,45,56,45,34,50,40,23,20,10,43,43,43,23,3,12], total:123},
      }
    },{
    name:'Fan', /* User Defined */
@@ -185,7 +274,7 @@ var Home = {
    automation_enabled:false,
    automation:['',''], /* Default Automation time */
    consumption:{
-     log20200109:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123},
+     log20200111:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123},
     }
   },{
   name:'Lights', /* User Defined */
@@ -195,7 +284,7 @@ var Home = {
   automation_enabled:false,
   automation:['',''],
   consumption:{
-    log20200109:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123},
+    log20200111:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123},
    }
   }
 ],
@@ -204,7 +293,7 @@ var Home = {
 // Home Power Consumption
 /* same as appliance but uses the total value of all appliance */
 consumption:{
-    log20200109:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123}
+    log20200111:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123}
 },
 
 
@@ -247,20 +336,27 @@ var Appliance = {
       <li>Turn on every: ${(Home.appliance[i].automation_enabled ? Home.appliance[i].automation[1] : 'disabled')}</li>
       <li>Turn off every: ${(Home.appliance[i].automation_enabled ? Home.appliance[i].automation[0] : 'disabled')}</li>
       </lu><br>
-
       </article>`;
       $('#appliances').append(appliance);
     }
-    for(i=0; i<Home.camera.length;i++){
+    $('#camera').html('');
+    Home.camera.map( cctv=>{
+      var serial = btoa(cctv.serial).replace('=','')+'_cctv';
       var camera =
-      `<article> <header>${Home.camera[i].name}</header>
-          <div style="width:100%;"><img id="${btoa(Home.camera[i].serial).replace('=','')}" style="max-width:640px; max-height:480px; width:100%; height:auto;"></div>
-        <script> const img = document.querySelector('#${btoa(Home.camera[i].serial).replace('=','')}'); const WS_URL = '${Home.camera[i].socket}'; const ws = new WebSocket(WS_URL); ws.onerror = function() {}; let urlObject; ws.onmessage = message => { const arrayBuffer = message.data; if(urlObject){ URL.revokeObjectURL(urlObject);} urlObject = URL.createObjectURL(new Blob([arrayBuffer])); delete arrayBuffer; delete message; img.src = urlObject;} </script>
+      `<article><header>${cctv.name}</header>
+          <div style="width:100%;"><img id="${serial}" style="max-width:640px; max-height:480px; width:100%; height:auto;"></div>
+        <script>
+          var ${serial+'img'} = document.querySelector('#${serial}');
+          var ${serial} = new WebSocket(${cctv.socket});
+          ${serial}.onerror = function() { ${serial}.close()}; let urlObject;
+          ${serial}.onmessage = message => { const arrayBuffer = message.data; if(urlObject){ URL.revokeObjectURL(urlObject);} urlObject = URL.createObjectURL(new Blob([arrayBuffer]));
+          delete arrayBuffer; delete message;
+          ${serial+'img'}.src = urlObject;}
+          </script>
       </article>`;
       $('#camera').append(camera);
+    });
 
-    }
-    this.updateData();
   },
   names: function(){
     var name = [];
@@ -275,7 +371,7 @@ var Appliance = {
     // loop through samples needed\
 
     //offset = 0-offset;
-    console.log('Time: ' + Time.log(offset-sample)+':'+Home.consumption.hasOwnProperty(Time.log(-0-offset)));
+    //console.log('Time: ' + Time.log(offset-sample)+':'+Home.consumption.hasOwnProperty(Time.log(-0-offset)));
     //Home
     var log=[]; var total = 0; var daily =[];
     for (var i = offset-sample+1; i <= offset; i++) {
@@ -283,7 +379,6 @@ var Appliance = {
       if(!Home.consumption.hasOwnProperty(stamp)){ log.push([0]); daily.push(0); continue;}
       log.push(Home.consumption[stamp].data);
        daily.push(Home.consumption[stamp].total);
-
     }
     data.log.push(log); data.daily.push(daily);
     log=[]; daily=[];
@@ -302,6 +397,7 @@ var Appliance = {
       }
       data.log.push(log); data.total.push(total); data.daily.push(daily);
     });
+    console.log(data);
       return data;
   },
 
@@ -361,11 +457,8 @@ var Appliance = {
       }
     });
 
-    this.updateData();
   },
-  updateData: function(){
-    Manager.pushData(Home);
-  },
+
   toggle: function(serial){
     serial = atob(serial+'=');
     Home.appliance.map(val=>{
@@ -417,7 +510,7 @@ var Charts = {
     for (var i = 0; i > -30; i--) {
       var stamp = Time.log(i);
       temp+=`<option value="${i}" ${(i==chartOffsetSelected ? 'selected': '' )}>${Time.date(i)}</option>`;
-      if(stamp==limit) {console.log(stamp);break;}
+      if(stamp==limit) {break;}
     }
     $('#chartOffset').html(temp);
     // Main chart
@@ -429,6 +522,7 @@ var Charts = {
         theme:{monochrome:{enabled:true,}}, fill:{ colors: [ ()=> { var hexDigits = new Array ("0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"); rgb = $('li[selected]').css('color'); rgb = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/); hex='#'; for(i=1;i<=3;i++){ hex+=isNaN(rgb[i]) ? "00" : hexDigits[(rgb[i] - rgb[i] % 16) / 16] + hexDigits[rgb[i] % 16];} return hex;}, '#aaa']},
         tooltip: { y: { formatter: function (val) { return "" + (val||0) + "W"}}}
     }
+
     //Prepare Data
     switch (chartDateSelected) {
       case 'Weekly':
@@ -436,7 +530,7 @@ var Charts = {
             main.series.push({name:appliance[i], data:data})
           });
           main.xaxis.categories = Time.days(chartOffsetSelected);
-          console.log();
+          //console.log();
         break;
       case 'Monthly':
           Appliance.data(chartOffsetSelected, sample=30,limit=limit).daily.map((data, i)=>{
@@ -445,17 +539,19 @@ var Charts = {
           main.xaxis.categories = Time.range(chartOffsetSelected-30,chartOffsetSelected);
         break;
       default:
+
       Appliance.data(chartOffsetSelected,sample=1,limit=limit).log.map((data, i)=>{
-        main.series.push({name:appliance[i], data:data[0]})
+        main.series.push({name:appliance[i], data:data[0]});
+
       });
-      main.xaxis.categories = Time.hours;
+      main.xaxis.categories=(Time.hours(main.series[0].data.length));
     }
-    console.log('Main object: '+JSON.stringify(main.series));
+    //console.log('Main object: '+JSON.stringify(main.series));
 
 
 
     //Donut chart
-    console.log(data);
+    //console.log(data);
     var template = {
       chart: { height: 400, type: 'donut', },
       stroke: {show: true, width: 0.7, colors: ['black']},
@@ -464,7 +560,7 @@ var Charts = {
       legend:{position:'bottom'},
       plotOptions:{pie:{donut:{labels:{show:true,total:{showAlways:true,show:true}}}}},
       labels:Appliance.names(),
-      tooltip: { y: { formatter: function (val) { return "" + val + "W"}}}
+      tooltip: { y: { formatter: function (val) { return "" + (val/1000).toFixed(2) + "kW"}}}
       };
       //End of donut
 
@@ -482,7 +578,7 @@ var Charts = {
           else{ Charts['donut'].updateOptions(template);}}
       ,100);
 
-        console.log('ad');
+      //  console.log('ad');
 
       var most =0;
       var max=0;
@@ -499,18 +595,17 @@ var Charts = {
       var log = [
         {name:'Total Power Consumption', value:power/1000, unit:'kW'},
         {name:'Estimated Cost', value:(price*1).toFixed(2), unit:'Pesos / kW'},
-        {name:'Estimated Price', value:(power/24/price).toFixed(2), unit:'kW / Hour'},
+        {name:'Estimated Price', value:(power/1000*price).toFixed(2), unit:'Pesos'},
 
         {name:'', value:'', unit:''},
         {name:'Most Used Appliance', value:appliance[most+1], unit:''},
-        {name:`${appliance[most+1]} Power Consumption`, value:max, unit:''},
+        {name:`${appliance[most+1]} Power Consumption`, value:max/1000, unit:'Kw Hour'},
       ];
       var temp = '';
     log.map(val=>{
       temp += `<tr><td>${val.name}</td><td><b>${ val.value } ${val.unit}</b></td></tr>`
     });
     $('#computations').html(temp);
-
   },
   select: function(){
     // get values as a draft
@@ -572,6 +667,16 @@ var System = {
     Object.keys(settings).map(val =>{ $(`#${val}`).val(settings[val]);});
     // Listen
     $('.settings').on('change', function(event){ event.stopPropagation(); event.stopImmediatePropagation(); System.save(); });
+    //Setup Home
+    var home = localStorage.getItem('Home');
+    if(home==null || home==''){
+      localStorage.setItem('Home', JSON.stringify(Home));
+    }
+    else{
+      Home = JSON.parse(home);
+    }
+
+
     // Initialize
     System.exec();
     // Tab Functionalities
