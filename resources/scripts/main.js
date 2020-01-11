@@ -158,6 +158,7 @@ var Time = {
        if(typeof(user_request)=='object') Local.send(JSON.stringify(user_request));
      }
      Local.onopen = (e)=>{
+       Modal.alert('Local is Online!');
        console.log('Local is online');
        this.status.Local==true;
      }
