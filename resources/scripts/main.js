@@ -1,6 +1,7 @@
 $(document).ready(function(){
 
-  console.log(btoa('jale\''));
+
+console.log(btoa('jale\''));
 console.log(atob(''));
   // Setup Infos
 
@@ -58,6 +59,29 @@ asd.onopen = (e)=>{
 //end test
 console.log(navigator.onLine);
 });
+
+
+function httpGet(theUrl)
+{
+    if (window.XMLHttpRequest)
+    {// code for IE7+, Firefox, Chrome, Opera, Safari
+        xmlhttp=new XMLHttpRequest();
+    }
+    else
+    {// code for IE6, IE5
+        xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    xmlhttp.onreadystatechange=function()
+    {
+        if (xmlhttp.readyState==4 && xmlhttp.status==200)
+        {
+            return xmlhttp.responseText;
+        }
+    }
+    xmlhttp.open("GET", theUrl, false );
+    xmlhttp.send();
+}
+
 
 
 
@@ -127,12 +151,10 @@ var Time = {
      }
      //Init sockets
      this.localHander();
-
-
    },
    localHander: function(){
      // Local Setup
-     var Local = new WebSocket('wss://smart-home.local:443');
+     var Local = new WebSocket('wss://smart-home-beta.local:4300');
      Local.onerror = function(e) {
      };
      Local.onmessage = function(message){
@@ -158,20 +180,23 @@ var Time = {
        if(typeof(user_request)=='object') Local.send(JSON.stringify(user_request));
      }
      Local.onopen = (e)=>{
-       Modal.alert('Local is Online!');
+       //Modal.alert('Local is Online!');
        console.log('Local is online');
+       $('#_status_').html('local connection');
        this.status.Local==true;
      }
 
        // Disconnection
      Local.onclose = function(e) {
       console.log('Local is offline. Reconnect will be attempted in 1 second.', e.reason);
+      $('#_status_').html('No Connection. ' + e.reason);
       setTimeout(function() {
           Socket.localHander();
         }, 1000);
       };
     Local.onerror = function(err) {
         console.error('Local encountered error: ', err.message, 'Closing Local');
+        $('#_error_').html(err.message)
         Local.close();
         return;
       }
@@ -213,6 +238,13 @@ var Time = {
           Charts.render();
           Appliance.init()
         break;
+      case 'notify':
+          var user_request={
+            type:'fetch',
+            status:Socket.status[type].token
+          }
+          break;
+
       case 'remove':
 
         break;
