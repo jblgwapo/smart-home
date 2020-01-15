@@ -124,7 +124,6 @@
       <section>
         <article>
           <header>Timeline
-            <label class="switch"><input type="checkbox"><span class="slider"></span></label>
           </header>
 
           <div graph id="chart"></div>
@@ -216,7 +215,10 @@
               Name: <input type="text" id="username" value="">
             </li>
             <li>
-              Home Key: <input type="text" id="serial" value="">
+              Home Key: <input type="text" id="serial" value="" >
+            </li>
+            <li>
+              <button onclick="System.updateCredentials()">Save</button>
             </li>
             <li>
               <em>Please don't share your serial keys to anyone.</em>

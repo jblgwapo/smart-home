@@ -1,6 +1,7 @@
 $(document).ready(function(){
 
 
+
 console.log(btoa('jale\''));
 console.log(atob(''));
   // Setup Infos
@@ -29,7 +30,6 @@ Charts.init();
   // Graphs
 
 Socket.init();
-
 
 
 //console.log(Appliance.weeklyChartData(-1));
@@ -125,7 +125,7 @@ var Time = {
   months:['Jan ','Feb ','Mar ','Apr ','May ','Jun ','Jul ','Aug ','Sep ','Oct ','Nov ','Dec '],
   day:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
   hours: function(i){
-    return ['1:00 AM','2:00 AM','3:00 AM','4:00 AM','5:00 AM','6:00 AM','7:00 AM','8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 NN','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM','7:00 PM','8:00 PM','9:00 PM','10:00 PM','11:00 PM','12:00 AM' ].splice(0,i);
+    return ['12 MN','1 AM','2 AM','3 AM','4 AM','5 AM','6 AM','7 AM','8 AM','9 AM','10 AM','11 AM','12 NN','1 PM','2 PM','3 PM','4 PM','5 PM','6 PM','7 PM','8 PM','9 PM','10 PM','11 PM' ].splice(0,i);
   },
 }
 
@@ -136,8 +136,9 @@ var Time = {
      Local:{isOnline:false, token:null},
      Global:{isOnline:false, token:null},
    },
-   Local:{ /* Local placeholder */},
-   Global:{ /* Global placeholder */},
+   Sockets:{Local:'wss://smart-home-beta.local:417', Global:'wss://smart-home.local:7000'},
+   //Sockets:{Local:'ws://localhost:417', Global:'wss://smart-home.local:7000'},
+   mode:'Local',
    init: function(){
      var queue = localStorage.getItem('queue');
      try {
@@ -150,20 +151,26 @@ var Time = {
        localStorage.setItem('queue', JSON.stringify(this.queue));
      }
      //Init sockets
-     this.localHander();
+
+
+     this.connectionHandler();
    },
-   localHander: function(){
+   connectionHandler: function(){
      // Local Setup
-     var Local = new WebSocket('wss://smart-home-beta.local:4300');
-     Local.onerror = function(e) {
-     };
-     Local.onmessage = function(message){
+
+     try {
+       Socket['wss'] = new WebSocket(Socket.Sockets[Socket.mode]);
+     } catch (e) {
+       this.search();
+     }
+
+     Socket.wss.onmessage = function(message){
        //console.log(message.data);
        //Callback on wrong server
        try {
         var server_request = JSON.parse(message.data);
        } catch (e) {
-         Local.close();
+         Socket.wss.close();
          console.log('Server does not comply to standards: ' + JSON.stringify(message.data));
          return;
        }
@@ -171,38 +178,47 @@ var Time = {
 
        if(!server_request.hasOwnProperty('status')&& !server_request.hasOwnProperty('type')){
          console.log('Rejected Message From Server');
-         console.log('Message: ' + message);
+         console.log('Message: ' + JSON.stringify(message));
          return; }
 
 
        var user_request = Socket.handler(server_request);
        // Request verification
-       if(typeof(user_request)=='object') Local.send(JSON.stringify(user_request));
+       if(typeof(user_request)=='object') Socket.wss.send(JSON.stringify(user_request));
      }
-     Local.onopen = (e)=>{
+     Socket.wss.onopen = (e) =>{
        //Modal.alert('Local is Online!');
-       console.log('Local is online');
-       $('#_status_').html('local connection');
-       this.status.Local==true;
+       console.log(Socket.mode + ' is connected!');
+       $('#_status_').html(Socket.mode + ' connection');
+       Socket.status[Socket.mode].isOnline==true;
+       //Loop through queue
+       setTimeout( () => {
+         try {
+           Socket.queue.map( req => {
+             req.status = Socket.status[Socket.mode].token;
+             Socket.wss.send(JSON.stringify(req));
+           })
+           Socket.queue = [];
+         } catch (e) {}
+       }, 1000);
      }
 
        // Disconnection
-     Local.onclose = function(e) {
-      console.log('Local is offline. Reconnect will be attempted in 1 second.', e.reason);
+     Socket.wss.onclose = function(e) {
+      console.log(`${Socket.mode} is offline. Searching for socket.`, e.reason);
       $('#_status_').html('No Connection. ' + e.reason);
-      setTimeout(function() {
-          Socket.localHander();
-        }, 1000);
+        Socket.status[Socket.mode].isOnline==false;
+        Socket.search();
       };
-    Local.onerror = function(err) {
+    Socket.wss.onerror = function(err) {
+        Socket.wss.close();
         console.error('Local encountered error: ', err.message, 'Closing Local');
-        $('#_error_').html(err.message)
-        Local.close();
-        return;
+        $('#_error_').html(err.message);
       }
    },
-   handler: function(server_request, type='Local'){
+   handler: function(server_request, type=this.mode){
      var user_request ='';
+     console.log('Server: '+server_request.type);
      switch (server_request.type) {
        case 'handshake':
           // Get serial
@@ -226,47 +242,74 @@ var Time = {
           //fetch response
           if(server_request.status=='No data')return;
           try {
+            //check for file
+
+            if(server_request.status.appliance.length==0){ console.log('Corrupted data: ' + JSON.stringify(server_request));return;}
+
             Home = server_request.status; //JSON.parse(server_request.status)
+
           } catch (e) {
             console.log('Data parse error: ' + e);
-            console.log(server_request.status);
+            console.log( JSON.stringify(server_request));
             return;
           }
           //console.log(JSON.stringify(server_request));
           localStorage.setItem('Home', JSON.stringify(Home) );
           console.log('New Data');
           Charts.render();
+
           Appliance.init()
+
+
+
         break;
       case 'notify':
           var user_request={
             type:'fetch',
             status:Socket.status[type].token
           }
+      case 'screenshot':
+            //var serial = server_request.serial;
+            //console.log(serial);
+            setTimeout( function(){
+              var serial = '#'+btoa(server_request.serial).replace('=','')+'_cctv';
+              var frame = URL.createObjectURL(new Blob([server_request.status[0].data]));
+              console.log(server_request.status);
+              $('#UWEhZTY_cctv').attr('src', frame);
+              //$('#UWEhZTY_cctv').attr('src',frame);
+            },100);
+
           break;
-
-      case 'remove':
-
-        break;
-
-       default: return;
+       default:
+       return;
      }
      console.log('Message to server:' + JSON.stringify(user_request));
     return user_request;
    },
 
+   search: function(){
+     setTimeout(function() {
+       if(Socket.mode=='Local'){ Socket.mode='Global'; console.log('Switched to global');}
+       else{ Socket.mode='Local'; console.log('Switched to local'); }
+        Socket.connectionHandler();
+       }, 1000);
+   },
 
+   request: function(request){
+     // Accepts object !important
+     Socket.queue.push(request);
+     localStorage.setItem('queue',JSON.stringify(Socket.queue));
+       try {
+         Socket.queue.map( req => {
+           req.status = Socket.status[Socket.mode].token;
+           Socket.wss.send(JSON.stringify(req));
+         })
+         Socket.queue = [];
+         localStorage.setItem('queue',JSON.stringify(Socket.queue));
+       } catch (e) {}
 
-   pushData: function(data){
-     this.queue.push(data);
-     localStorage.setItem('queue', JSON.stringify(this.queue));
    },
    queue:[],
-
-
-
-
-
  };
 
 
@@ -281,6 +324,7 @@ var Home = {
     type:'switch',
     status:'on', /* Remote */
     serial:'@#4as', /* NRF serial key mockup */
+    socket:1,
     automation_enabled:true, /* Automation is active */
     automation:['12:30 AM','12:00 PM'], /* Automation Time when active */
     consumption:{
@@ -294,6 +338,7 @@ var Home = {
     type:'switch',
     status:true, /* Remote */
     serial:'rocks',
+    socket:2,
     automation_enabled:false,
     automation:['07:00 PM','03:00 AM'],
     consumption:{
@@ -304,6 +349,7 @@ var Home = {
    type:'switch',
    status:true, /* Remote */
    serial:'staph',
+   socket:1,
    automation_enabled:false,
    automation:['',''], /* Default Automation time */
    consumption:{
@@ -314,6 +360,7 @@ var Home = {
   type:'switch',
   status:true, /* Remote */
   serial:'oleds',
+  socket:2,
   automation_enabled:false,
   automation:['',''],
   consumption:{
@@ -356,46 +403,48 @@ var Appliance = {
   init: function(){
 
     $('#appliances').html('');
-    for(i=0; i<Home.appliance.length; i++){
-      var appliance =
-      `<article><header>${Home.appliance[i].name}
-      <label class="switch"><input type="checkbox" ${(Home.appliance[i].status=='on'?'checked':'')} onchange="Appliance.toggle('${btoa(Home.appliance[i].serial).replace('=','')}')"><span class="slider"></span></label></header>
-      <lu><li>Serial Key: ${btoa(Home.appliance[i].serial).replace('=','')}</li>
-      <li>Type: ${Home.appliance[i].type}</li>
-      <li>Consumption: ${'sample'} Watts today</li><br>
-      <li>Automation: ${(Home.appliance[i].automation_enabled ? 'enabled' : 'disabled')}<br>
-      <button onclick="Appliance.configure('${(Home.appliance[i].serial)}')" style=" font-size:0.7em;">Configure</button>
+    Home.appliance.map( appliance =>{
+      var total = 0;
+      try {
+        total = appliance[Time.log()].total;
+      } catch (e) {}
+
+      var serial = btoa(appliance.serial).replace('=','');
+
+      var temp =
+      `<article><header><span style="width:80%;"><input type="text" id="${serial}_${appliance.socket}" onchange="Appliance.rename('${serial}',${appliance.socket})" value="${appliance.name}" style="vertical-align:top; border:none; background:none; display:inline-block; width:80%;"></span>
+      <label class="switch"><input type="checkbox" ${(appliance.status==true?'checked':'')} onchange="Appliance.toggle('${serial}',${appliance.socket})"><span class="slider"></span></label></header>
+      <lu><li>Serial Key: ${ serial }:${ appliance.socket }</li>
+      <li>Type: ${appliance.type}</li>
+      <li>Consumption: ${ total } Watts today</li><br>
+      <li>Automation: ${(appliance.automation_enabled ? 'enabled' : 'disabled')}
+
       </li>
-      <li>Turn on every: ${(Home.appliance[i].automation_enabled ? Home.appliance[i].automation[1] : 'disabled')}</li>
-      <li>Turn off every: ${(Home.appliance[i].automation_enabled ? Home.appliance[i].automation[0] : 'disabled')}</li>
+      <li>Turn on every: ${(appliance.automation_enabled ? appliance.automation[1] : 'disabled')}</li>
+      <li>Turn off every: ${(appliance.automation_enabled ? appliance.automation[0] : 'disabled')}</li>
+
       </lu><br>
+      <button onclick="Appliance.configure('${(serial)}',${appliance.socket})" style=" font-size:0.7em;">Configure</button>
       </article>`;
-      $('#appliances').append(appliance);
-    }
+      $('#appliances').append(temp);
+    });
+    $('#appliances').append('<article><header>Add a Smart Socket<button onclick="Appliance.addWindow()">ADD</button></header><b>Instructions:</b><p>1. Plug your device<br>2. Press the add button above this instructions.<br>3. Insert the serial key.<br>4. Wait for the confirmation.</p></article>');
     $('#camera').html('');
     Home.camera.map( cctv=>{
       var serial = btoa(cctv.serial).replace('=','')+'_cctv';
       var camera =
       `<article><header>${cctv.name}</header>
           <div style="width:100%;"><img id="${serial}" style="max-width:640px; max-height:480px; width:100%; height:auto;"></div>
-        <script>
-          var ${serial+'img'} = document.querySelector('#${serial}');
-          var ${serial} = new WebSocket(${cctv.socket});
-          ${serial}.onerror = function() { ${serial}.close()}; let urlObject;
-          ${serial}.onmessage = message => { const arrayBuffer = message.data; if(urlObject){ URL.revokeObjectURL(urlObject);} urlObject = URL.createObjectURL(new Blob([arrayBuffer]));
-          delete arrayBuffer; delete message;
-          ${serial+'img'}.src = urlObject;}
-          </script>
       </article>`;
       $('#camera').append(camera);
+      //$('#'+serial).attr('src','resources/splash/apple-splash-dark-2048-2732.png');
+      Socket.request({type:'frame', serial:cctv.serial})
     });
 
   },
   names: function(){
     var name = [];
-    for(i=0; i<Home.appliance.length; i++){
-      name.push(Home.appliance[i].name);
-    }
+    Home.appliance.map( val=>{name.push(val.name);});
     return name;
   },
   data:function(offset=0,sample=1){
@@ -444,8 +493,8 @@ var Appliance = {
     return dates[0];
   },
 
-  configure: function(serial){
-    var appliance;
+  configure: function(serial, socket){
+    var appliance; ser=atob(serial+'=');
     var hours=''; var minutes='';
     for(i=1;i<=12;i++){
       hours+='<option value="'+(i<10 ? '0'+ i:i )+'">'+(i<10 ? '0'+ i:i )+'</option>';
@@ -453,23 +502,24 @@ var Appliance = {
     for(i=0;i<60;i++){
       minutes+='<option value="'+(i<10 ? '0'+ i:i )+'">'+(i<10 ? '0'+ i:i )+'</option>';
     }
-    Home.appliance.map( val =>{ if(val.serial==serial) appliance=val; })
-    Modal.alert( `<b style="font-size:1.5em;">${appliance.name}</b><br><br>
+    Home.appliance.map( val =>{ if(val.serial==ser && val.socket==socket) appliance=val; })
+    if(!appliance) {Modal.alert('None Found '+serial); return;}
+    Modal.alert( `<b style="font-size:1.5em;">${appliance.name}</b> <a style="float:right; color:red; cursor:pointer;" onclick="Appliance.removePrompt('${serial}')">remove</a><br><br>
       Automation:
-      <select id="_automation_enabled" onchange="Appliance.updateConfig('${appliance.serial}')">
-      <option value="on">Enabled</option>
-      <option value="off" ${((appliance.automation_enabled==false)? 'selected':'')}>Disabled</option>
+      <select id="_automation_enabled" onchange="Appliance.updateConfig('${serial}',${appliance.socket})">
+      <option value="1">Enabled</option>
+      <option value="0" ${((appliance.automation_enabled==false)? 'selected':'')}>Disabled</option>
       </select>
 
       Turn On time:<br>
-      <select class="third" id="_on_hour">${hours}</select onchange="Appliance.updateConfig('${appliance.serial}')"> :
-      <select class="third" id="_on_min">${minutes}</select onchange="Appliance.updateConfig('${appliance.serial}')">
-      <select class="third" id="_on_label" onchange="Appliance.updateConfig('${appliance.serial}')"><option value="AM">AM</option><option value="PM">PM</option></select><br>
+      <select class="third" id="_on_hour" onchange="Appliance.updateConfig('${serial}',${appliance.socket})">${hours}</select> :
+      <select class="third" id="_on_min" onchange="Appliance.updateConfig('${serial}',${appliance.socket})">${minutes}</select >
+      <select class="third" id="_on_label" onchange="Appliance.updateConfig('${serial}',${appliance.socket})"><option value="AM">AM</option><option value="PM">PM</option></select><br>
 
       Turn Off time:<br>
-      <select class="third" id="_off_hour">${hours}</select onchange="Appliance.updateConfig('${appliance.serial}')"> :
-      <select class="third" id="_off_min">${minutes}</select onchange="Appliance.updateConfig('${appliance.serial}')">
-      <select class="third" id="_off_label" onchange="Appliance.updateConfig('${appliance.serial}')"><option value="AM">AM</option><option value="PM">PM</option></select><br>
+      <select class="third" id="_off_hour" onchange="Appliance.updateConfig('${serial}',${appliance.socket})">${hours}</select> :
+      <select class="third" id="_off_min" onchange="Appliance.updateConfig('${serial}',${appliance.socket})">${minutes}</select>
+      <select class="third" id="_off_label" onchange="Appliance.updateConfig('${serial}',${appliance.socket})"><option value="AM">AM</option><option value="PM">PM</option></select><br>
       `);
       $('#_on_hour').val(appliance.automation[1].slice(0,2));
       $('#_on_min').val(appliance.automation[1].slice(3,5));
@@ -477,28 +527,98 @@ var Appliance = {
       $('#_off_hour').val(appliance.automation[0].slice(0,2));
       $('#_off_min').val(appliance.automation[0].slice(3,5));
       $('#_off_label').val(appliance.automation[0].slice(6,9));
+
+      $('#_on_hour').on('change', function(){Appliance.updateConfig(appliance.serial, appliance.socket)} );
+      $('#_on_min').on('change', function(){Appliance.updateConfig(appliance.serial, appliance.socket)} );
+      $('#_on_label').on('change', function(){Appliance.updateConfig(appliance.serial, appliance.socket)} );
+      $('#_off_hour').on('change', function(){Appliance.updateConfig(appliance.serial, appliance.socket)} );
+      $('#_off_min').on('change', function(){Appliance.updateConfig(appliance.serial, appliance.socket)} );
+      $('#_off_label').on('change', function(){Appliance.updateConfig(appliance.serial, appliance.socket)} );
+
   },
   // Apps
-  updateConfig:function(serial){
+  updateConfig:function(serial, socket){
+    console.log('S: '+socket);
+    try {
+      var serial = atob(serial+'=');
+    } catch (e) {
+      return;
+    } finally {
+    }
+
+    console.log(serial);
+
     Home.appliance.map( val =>{
       console.log((val.serial==serial));
       if(val.serial==serial) {
-        val.automation_enabled = String($('#_automation_enabled').val());
+        val.automation_enabled = Boolean(Number($('#_automation_enabled').val()));
+        console.log('Automation:'+Boolean($('#_automation_enabled').val()));
         val.automation[0] = `${$('#_off_hour').val()}:${$('#_off_min').val()} ${$('#_off_label').val()}`;
         val.automation[1] = `${$('#_on_hour').val()}:${$('#_on_min').val()} ${$('#_on_label').val()}`;
+        Socket.request({type:'automation', serial:val.serial, socket:val.socket, status:0, automation_enabled:val.automation_enabled, automation:val.automation})
         console.log(val);
       }
     });
 
   },
-
-  toggle: function(serial){
-    serial = atob(serial+'=');
+  removePrompt: function(serial){
+    var true_serial = atob(serial+'=');
+    var appliances = '';
     Home.appliance.map(val=>{
-      if(val.serial){  }
-
+      if(val.serial==true_serial){
+        appliances+=`<li>${val.name}</li>`
+      }
+    });
+    if(appliances=='')return;
+    Modal.confirm(`
+      <b style="height:1.2em">Are you sure you want to remove this socket?</b><br>
+      Serial: ${serial}<br>
+      <em>The socket includes the following</em>:<lu>${appliances}</lu>
+      `, `Appliance.remove('${serial}')`);
+  },
+  addWindow: function(){
+    Modal.confirm('<b>Insert Socket Serial Key</b><br><input id="_appliance_serial_key"></input>', 'Appliance.add()');
+  },
+  //Rename, remove and toggle
+  add: function(){
+    serial = $('#_appliance_serial_key').val();
+    if(serial.length!=7){Modal.alert('Invalid serial'); return}
+    try {
+      serial = atob(serial+'=');
+      console.log('reg:'+serial);
+      Socket.request({type:'register', status:0, serial:serial });
+    } catch (e) {
+      Modal.alert('Invalid serial');
+    } finally {
+      return;
+    }
+  },
+  remove: function(serial){
+    serial=atob(serial+'=');
+    Socket.request({type:'remove', status:0, serial:serial , item:'appliance'});
+    Modal.close(Modal.count-2);
+  },
+  rename:function(serial, socket){
+    true_serial = atob(serial+'=');
+    Home.appliance.map(val=>{
+      if(val.serial==true_serial && val.socket==socket){
+        console.log('Rename: '+ serial +' ' + socket);
+        var newName = $(`#${serial}_${socket}`).val();
+        console.log('Rename:'+newName);
+        Socket.request({type:'rename', status:0, name:newName, serial:val.serial, socket:val.socket  })
+      }
     })
   },
+  toggle: function(serial, socket){
+    serial = atob(serial+'=');
+    console.log('Toggle:'+serial+':'+socket);
+    Home.appliance.map(val=>{
+      if(val.serial==serial && val.socket==socket){
+        Socket.request({type:'toggle', status:0, state:Boolean(!val.status), serial:val.serial, socket:val.socket  })
+      }
+    })
+  },
+
 }
 
 
@@ -514,7 +634,6 @@ var Charts = {
     var chartOffset = $('#chartOffset').on('change', function() {
       Charts.render();
     });
-
   },
 
   render:async function(){
@@ -552,6 +671,7 @@ var Charts = {
         chart: { height: 350, type: System.data.chartType}, plotOptions: { bar: { horizontal: false, columnWidth: '77%', endingShape: 'flat'},},
         dataLabels: { enabled: false }, stroke: {curve:'smooth', show: true, width: 0.7, colors: ['black']}, series: [],
         xaxis: { categories: [], labels:{show:true, style:{fontSize:'9px'}}}, legend:{show:false},
+        yaxis: { labels:{ formatter:function(val){ return val.toFixed(0) + 'W'; }}},
         theme:{monochrome:{enabled:true,}}, fill:{ colors: [ ()=> { var hexDigits = new Array ("0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"); rgb = $('li[selected]').css('color'); rgb = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/); hex='#'; for(i=1;i<=3;i++){ hex+=isNaN(rgb[i]) ? "00" : hexDigits[(rgb[i] - rgb[i] % 16) / 16] + hexDigits[rgb[i] % 16];} return hex;}, '#aaa']},
         tooltip: { y: { formatter: function (val) { return "" + (val||0) + "W"}}}
     }
@@ -579,7 +699,7 @@ var Charts = {
       });
       main.xaxis.categories=(Time.hours(main.series[0].data.length));
     }
-    //console.log('Main object: '+JSON.stringify(main.series));
+    console.log('Main object: '+JSON.stringify(main.series));
 
 
 
@@ -654,8 +774,12 @@ var Charts = {
       return;
     }
     for(i=0; i<series.length;i++){
-      if (series[i]==chartViewSelected) {Charts['chart'].showSeries(series[i]); continue}
-      this['chart'].hideSeries(series[i]);
+      try {
+        if (series[i]==chartViewSelected) {Charts['chart'].showSeries(series[i]); continue}
+        this['chart'].hideSeries(series[i]);
+      } catch (e) {
+
+      }
     }
   },
 
@@ -689,15 +813,33 @@ var System = {
     var serial = $('#_home-serial').val();
     localStorage.setItem('credentials', JSON.stringify({username:username, serial:serial}));
     location.reload();
+    //Decode link
+    //Set link in socket
+  },
+  updateCredentials: function(){
+    var username = $('#username').val();
+    var serial = $('#serial').val();
+    console.log(username+''+serial);
+    Modal.confirm('Are you sure you want to change your credentials? <br><em>Changing to the wrong home serial would neglect existing</em>',
+    `localStorage.setItem('credentials', JSON.stringify({username:'${username}', serial:'${serial}'}));
+    location.reload();`
+  );
+
+
   },
 
   init: function(){
     // Pull
     var settings = JSON.parse(localStorage.getItem('settings'));
     if (settings==null){ this.save(); settings=JSON.parse(localStorage.getItem('settings')); };
+    var serial = JSON.parse(localStorage.getItem('credentials'));
+    if (serial==null){  System.serial='' };
     System.data = settings;
+    System.serial= serial.serial;
+
     //Restore Settings
     Object.keys(settings).map(val =>{ $(`#${val}`).val(settings[val]);});
+
     // Listen
     $('.settings').on('change', function(event){ event.stopPropagation(); event.stopImmediatePropagation(); System.save(); });
     //Setup Home
@@ -722,7 +864,7 @@ var System = {
         if(target==0){ setTimeout(function(){Charts.render()},50);}
       });
       $('nav li').eq(Number(localStorage.getItem('tab'))).trigger('click');
-  },data:{},
+  },data:{},serial:'',
   save: function(){
     this.data = {
       theme:$('#theme').val(),
