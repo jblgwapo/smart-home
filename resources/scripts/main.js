@@ -20,7 +20,7 @@ console.log(atob(''));
   }
 
   var data = JSON.parse(localStorage.getItem('credentials'));
-  if( data==null ){ Modal.slide('Let\'s Get Started.','User Name:<input type="text" id="_username"><br>Home Serial Key<input type="text" id="_home-serial"><br><button onclick="System.setup()">Submit</button>', 'Modal.alert(\'Please Complete the details\')'); return;}
+  if( data==null ){ Modal.slide('Let\'s Get Started.','User Name:<input type="text" id="_username"><br>Home Serial Key<input type="text" id="_home-serial"><br><button onclick="System.setup()">Submit</button>', 'Modal.alert(\'Please Complete the details\')', false); return;}
     $('#username').val(data.username); $('#serial').val(data.serial);
 
 
@@ -30,7 +30,7 @@ Charts.init();
   // Graphs
 
 Socket.init();
-
+CCTV.init();
 
 //console.log(Appliance.weeklyChartData(-1));
 
@@ -136,7 +136,7 @@ var Time = {
      Local:{isOnline:false, token:null},
      Global:{isOnline:false, token:null},
    },
-   Sockets:{Local:'wss://smart-home-beta.local:417', Global:'wss://smart-home.local:7000'},
+   Sockets:{Local:'wss://smart-home-beta.local:417', Global:'wss://smart-home.com:7000/--'},
    //Sockets:{Local:'ws://localhost:417', Global:'wss://smart-home.local:7000'},
    mode:'Local',
    init: function(){
@@ -153,16 +153,14 @@ var Time = {
      //Init sockets
 
 
-     this.connectionHandler();
+     Socket.connectionHandler();
    },
    connectionHandler: function(){
      // Local Setup
 
-     try {
        Socket['wss'] = new WebSocket(Socket.Sockets[Socket.mode]);
-     } catch (e) {
-       this.search();
-     }
+       console.log('Connecting to '+ Socket.Sockets[Socket.mode]);
+
 
      Socket.wss.onmessage = function(message){
        //console.log(message.data);
@@ -175,7 +173,6 @@ var Time = {
          return;
        }
        //Callback on server error
-
        if(!server_request.hasOwnProperty('status')&& !server_request.hasOwnProperty('type')){
          console.log('Rejected Message From Server');
          console.log('Message: ' + JSON.stringify(message));
@@ -190,7 +187,7 @@ var Time = {
        //Modal.alert('Local is Online!');
        console.log(Socket.mode + ' is connected!');
        $('#_status_').html(Socket.mode + ' connection');
-       Socket.status[Socket.mode].isOnline==true;
+       Socket.status[Socket.mode].isOnline=true;
        //Loop through queue
        setTimeout( () => {
          try {
@@ -204,17 +201,16 @@ var Time = {
      }
 
        // Disconnection
-     Socket.wss.onclose = function(e) {
-      console.log(`${Socket.mode} is offline. Searching for socket.`, e.reason);
-      $('#_status_').html('No Connection. ' + e.reason);
-        Socket.status[Socket.mode].isOnline==false;
-        Socket.search();
-      };
     Socket.wss.onerror = function(err) {
-        Socket.wss.close();
-        console.error('Local encountered error: ', err.message, 'Closing Local');
-        $('#_error_').html(err.message);
+      Socket.wss.close();
       }
+    Socket.wss.onclose = function(e) {
+     //console.log(`${Socket.mode} is offline. Searching for socket.`, e.reason);
+     $('#_status_').html('No Connection.');
+       Socket.status[Socket.mode].isOnline=false;
+       Socket.search();
+       //Socket.search();
+     };
    },
    handler: function(server_request, type=this.mode){
      var user_request ='';
@@ -258,28 +254,29 @@ var Time = {
           console.log('New Data');
           Charts.render();
 
-          Appliance.init()
-
-
-
+          setTimeout(function(){
+            Appliance.init()
+          },150)
         break;
       case 'notify':
           var user_request={
             type:'fetch',
             status:Socket.status[type].token
           }
-      case 'screenshot':
+      case 'snap':
             //var serial = server_request.serial;
             //console.log(serial);
             setTimeout( function(){
               var serial = '#'+btoa(server_request.serial).replace('=','')+'_cctv';
-              var frame = URL.createObjectURL(new Blob([server_request.status[0].data]));
+              //var frame = URL.createObjectURL(new Blob([server_request.status[0].data]));
               console.log(server_request.status);
-              $('#UWEhZTY_cctv').attr('src', frame);
+              $('#UWEhZTY_cctv').attr('src', 'data:image/jpg;base64,'+server_request.status);
               //$('#UWEhZTY_cctv').attr('src',frame);
             },100);
-
           break;
+      case 'feed':
+            $('#cctv_feed').attr('src', 'data:image/jpg;base64,'+server_request.status);
+      break
        default:
        return;
      }
@@ -290,7 +287,7 @@ var Time = {
    search: function(){
      setTimeout(function() {
        if(Socket.mode=='Local'){ Socket.mode='Global'; console.log('Switched to global');}
-       else{ Socket.mode='Local'; console.log('Switched to local'); }
+       else{ Socket.mode='Local'; console.log('Switched to local');}
         Socket.connectionHandler();
        }, 1000);
    },
@@ -389,7 +386,40 @@ camera:[{
 
 
 
+var CCTV = {
+  init: function(){
+    $('#camera').html('');
+    Home.camera.map( cctv=>{
+      var serial = btoa(cctv.serial).replace('=','')+'_cctv';
+      var camera =
+      `<article><header><input value="${cctv.name}" style="background:none; border:none;"></header>
+          <div style="width:100%;"><img id="${serial}" style="height:200px; width:auto;"><br><button onclick="CCTV.live()">Live</button></div>
+      </article>`;
+      $('#camera').append(camera);
+      //Socket.request({type:'frame', status:0, serial:cctv.serial });
+    })
 
+  },
+  update: function(serial, data){
+
+
+  },
+  rename: function(){
+
+
+
+  },
+  live: function(serial){
+    
+    Modal.slide('Live Feed:',
+    `<img src="resources/images/cctv_placeholder.png" id="cctv_feed" style="width:100%; height:auto;">`,
+    `Socket.request({type:'stopFeed', status:0, });`
+  )
+
+
+  }
+
+};
 
 
 
@@ -429,17 +459,7 @@ var Appliance = {
       $('#appliances').append(temp);
     });
     $('#appliances').append('<article><header>Add a Smart Socket<button onclick="Appliance.addWindow()">ADD</button></header><b>Instructions:</b><p>1. Plug your device<br>2. Press the add button above this instructions.<br>3. Insert the serial key.<br>4. Wait for the confirmation.</p></article>');
-    $('#camera').html('');
-    Home.camera.map( cctv=>{
-      var serial = btoa(cctv.serial).replace('=','')+'_cctv';
-      var camera =
-      `<article><header>${cctv.name}</header>
-          <div style="width:100%;"><img id="${serial}" style="max-width:640px; max-height:480px; width:100%; height:auto;"></div>
-      </article>`;
-      $('#camera').append(camera);
-      //$('#'+serial).attr('src','resources/splash/apple-splash-dark-2048-2732.png');
-      Socket.request({type:'frame', serial:cctv.serial})
-    });
+
 
   },
   names: function(){
@@ -475,7 +495,6 @@ var Appliance = {
            daily.push(val.consumption[stamp].total);
            total+=val.consumption[stamp].total;
         }
-
       }
       data.log.push(log); data.total.push(total); data.daily.push(daily);
     });
@@ -605,7 +624,7 @@ var Appliance = {
         console.log('Rename: '+ serial +' ' + socket);
         var newName = $(`#${serial}_${socket}`).val();
         console.log('Rename:'+newName);
-        Socket.request({type:'rename', status:0, name:newName, serial:val.serial, socket:val.socket  })
+        Socket.request({type:'rename', status:0, name:newName, serial:val.serial, socket:val.socket, device:'appliance' })
       }
     })
   },
@@ -955,8 +974,8 @@ var Modal = {
     });
 
   },
-  slide: function(header, content, close='default'){
-    if (close=='default'){ close=`Modal.slideOut(${this.count})`; }
+  slide: function(header, content, callback='', exit=true){
+    var close = callback +  (exit==true ? `Modal.slideOut(${this.count})`: '');
     var temp = `<div class="modal" id="modal-${this.count}"><div class="slide-container" id="container-${this.count}"><div class="slide-header"><h3>${header}</h3><div class="slide-close" onclick="${close}">close</div></div><div class="slide-content">${content}</div></div></div>`;
 
     $('body').append(temp);
@@ -981,3 +1000,10 @@ var Modal = {
     });
   }
 };
+
+
+
+const debug = function(text) {
+
+  console.log(text);
+}
