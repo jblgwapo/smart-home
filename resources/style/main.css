@@ -114,11 +114,10 @@ nav { position: fixed;
                nav li { cursor: pointer;  font-size: 60%; color:var(--disabled) !important; width: 100%;}
                       nav li[selected]{ color:var(--accent) !important; }
                       nav svg{ height: 30px; width: 35px;}
-
 main { height: auto; width: 100%;
        margin: 4em auto;
       }
-      section {  width: 100%; display: none;}
+      section {  width: 100%; display: none; margin: 4em auto !important;}
               section > header {  padding-bottom: 0; font-size: 150%; font-weight: bold; width: 100%; display: block;}
               article { min-height: 500px; max-height: 500px ;/* Temporary */ overflow: hidden;
                         width: 98%; margin: 0; padding: var(--radius);

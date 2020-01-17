@@ -159,7 +159,7 @@ var Time = {
      // Local Setup
 
        Socket['wss'] = new WebSocket(Socket.Sockets[Socket.mode]);
-       console.log('Connecting to '+ Socket.Sockets[Socket.mode]);
+       //console.log('Connecting to '+ Socket.Sockets[Socket.mode]);
 
 
      Socket.wss.onmessage = function(message){
@@ -287,7 +287,9 @@ var Time = {
    search: function(){
      setTimeout(function() {
        if(Socket.mode=='Local'){ Socket.mode='Global'; console.log('Switched to global');}
-       else{ Socket.mode='Local'; console.log('Switched to local');}
+       else{ Socket.mode='Local';
+       //console.log('Switched to local');
+     }
         Socket.connectionHandler();
        }, 1000);
    },
@@ -410,7 +412,7 @@ var CCTV = {
 
   },
   live: function(serial){
-    
+
     Modal.slide('Live Feed:',
     `<img src="resources/images/cctv_placeholder.png" id="cctv_feed" style="width:100%; height:auto;">`,
     `Socket.request({type:'stopFeed', status:0, });`
@@ -878,7 +880,7 @@ var System = {
       var target = $(this).index();
         localStorage.setItem('tab', target);
         $('body > header').each(function(i){ if(i==target){ $(this).attr('active', ''); return; } $(this).removeAttr('active');});
-        $('main section').each(function(i){if(i==target){ $(this).attr('active', ''); return; } $(this).removeAttr('active');});
+        $('section').each(function(i){if(i==target){ $(this).attr('active', ''); return; } $(this).removeAttr('active');});
         $('nav li').each(function(i){if(i==target){ $(this).attr('selected', ''); return; } $(this).removeAttr('selected');});
         if(target==0){ setTimeout(function(){Charts.render()},50);}
       });
