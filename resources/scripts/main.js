@@ -132,8 +132,8 @@ var Time = {
 
  var Socket = {
    status:{
-     Local:{isOnline:false, token:null},
-     Global:{isOnline:false, token:null},
+     isOnline:false, token:null
+
    },
    Sockets:{Local:'wss://smart-home-beta.local:417', Global:'wss://smart-home.local:417'},
    //Sockets:{Local:'ws://localhost:417', Global:'wss://smart-home.local:7000'},
@@ -186,12 +186,12 @@ var Time = {
        //Modal.alert('Local is Online!');
        console.log(Socket.mode + ' is connected!');
        $('#_status_').html(Socket.mode + ' connection');
-       Socket.status[Socket.mode].isOnline=true;
+       Socket.status.isOnline=true;
        //Loop through queue
        setTimeout( () => {
          try {
            Socket.queue.map( req => {
-             req.status = Socket.status[Socket.mode].token;
+             req.status = Socket.status.token;
              Socket.wss.send(JSON.stringify(req));
            })
            Socket.queue = [];
@@ -206,7 +206,7 @@ var Time = {
     Socket.wss.onclose = function(e) {
      //console.log(`${Socket.mode} is offline. Searching for socket.`, e.reason);
      $('#_status_').html('No Connection.');
-       Socket.status[Socket.mode].isOnline=false;
+       Socket.status.isOnline=false;
        Socket.search();
        //Socket.search();
      };
@@ -225,12 +225,11 @@ var Time = {
           };
          break;
        case 'acknowledge':
-           if(server_request.status=='Local'){ Socket.status.Local.token = server_request.token }
-           if(server_request.status=='Global'){ Socket.status.Global.token = server_request.token }
+           Socket.status.token = server_request.token
            user_request['status']='OK';
            var user_request={
              type:'fetch',
-             status:Socket.status[type].token
+             status:Socket.status.token
            }
        break;
       case 'data':
@@ -260,7 +259,7 @@ var Time = {
       case 'notify':
           var user_request={
             type:'fetch',
-            status:Socket.status[type].token
+            status:Socket.status.token
           }
         break;
       case 'notification':
@@ -302,7 +301,7 @@ var Time = {
      localStorage.setItem('queue',JSON.stringify(Socket.queue));
        try {
          Socket.queue.map( req => {
-           req.status = Socket.status[Socket.mode].token;
+           req.status = Socket.status.token;
            Socket.wss.send(JSON.stringify(req));
          })
          Socket.queue = [];
