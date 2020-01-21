@@ -2,7 +2,7 @@
   "name": "Smart Home",
  "short_name":"Smart Home",
  "description": "A thesis requirement",
- "scope":".",
+ "scope":"",
  "start_url":"/smart-home/",
  "display" : "fullscreen",
  "orientation": "default",

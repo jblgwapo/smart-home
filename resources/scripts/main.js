@@ -1,7 +1,6 @@
 $(document).ready(function(){
 
 
-
 console.log(btoa('jale\''));
 console.log(atob(''));
   // Setup Infos
@@ -15,13 +14,13 @@ console.log(atob(''));
 
   // Checks if should display install popup notification:
   if (isIos() && !isInStandaloneMode()) {
-    $('body').html('');
-    Modal.slide('Install the app first', 'The app must be installed first before you can run it.');  return;
+    //$('body').html('');
+    //Modal.slide('Install the app first', 'The app must be installed first before you can run it.');  return;
   }
 
   var data = JSON.parse(localStorage.getItem('credentials'));
   if( data==null ){ Modal.slide('Let\'s Get Started.','User Name:<input type="text" id="_username"><br>Home Serial Key<input type="text" id="_home-serial"><br><button onclick="System.setup()">Submit</button>', 'Modal.alert(\'Please Complete the details\')', false); return;}
-    $('#username').val(data.username); $('#serial').val(data.serial);
+    $('#username').val(data.username); $('#serial').val(data.serial); $('#email').val(data.email); $('#notifications').val(data.notifications);
 
 
 System.init();
@@ -136,7 +135,7 @@ var Time = {
      Local:{isOnline:false, token:null},
      Global:{isOnline:false, token:null},
    },
-   Sockets:{Local:'wss://smart-home-beta.local:417', Global:'wss://smart-home.com:7000/--'},
+   Sockets:{Local:'wss://smart-home-beta.local:417', Global:'wss://smart-home.local:417'},
    //Sockets:{Local:'ws://localhost:417', Global:'wss://smart-home.local:7000'},
    mode:'Local',
    init: function(){
@@ -263,14 +262,17 @@ var Time = {
             type:'fetch',
             status:Socket.status[type].token
           }
+        break;
+      case 'notification':
+          Modal.alert(server_request.status);
+        break;
       case 'snap':
             //var serial = server_request.serial;
             //console.log(serial);
             setTimeout( function(){
-              var serial = '#'+btoa(server_request.serial).replace('=','')+'_cctv';
               //var frame = URL.createObjectURL(new Blob([server_request.status[0].data]));
-              console.log(server_request.status);
-              $('#UWEhZTY_cctv').attr('src', 'data:image/jpg;base64,'+server_request.status);
+              console.log(server_request.serial);
+              $(`#${server_request.serial}_cctv`).attr('src', 'data:image/jpg;base64,'+server_request.status);
               //$('#UWEhZTY_cctv').attr('src',frame);
             },100);
           break;
@@ -286,7 +288,7 @@ var Time = {
 
    search: function(){
      setTimeout(function() {
-       if(Socket.mode=='Local'){ Socket.mode='Global'; console.log('Switched to global');}
+       if(Socket.mode=='Local'){ Socket.mode='Global'; }//console.log('Switched to global');}
        else{ Socket.mode='Local';
        //console.log('Switched to local');
      }
@@ -322,7 +324,7 @@ var Home = {
     name:'Refrigerator', /* User Defined */
     type:'switch',
     status:'on', /* Remote */
-    serial:'@#4as', /* NRF serial key mockup */
+    serial:'aWsadef', /* NRF serial key mockup */
     socket:1,
     automation_enabled:true, /* Automation is active */
     automation:['12:30 AM','12:00 PM'], /* Automation Time when active */
@@ -336,7 +338,7 @@ var Home = {
     name:'Aircon', /* User Defined */
     type:'switch',
     status:true, /* Remote */
-    serial:'rocks',
+    serial:'gltsFga',
     socket:2,
     automation_enabled:false,
     automation:['07:00 PM','03:00 AM'],
@@ -347,7 +349,7 @@ var Home = {
    name:'Fan', /* User Defined */
    type:'switch',
    status:true, /* Remote */
-   serial:'staph',
+   serial:'staphss',
    socket:1,
    automation_enabled:false,
    automation:['',''], /* Default Automation time */
@@ -358,7 +360,7 @@ var Home = {
   name:'Lights', /* User Defined */
   type:'switch',
   status:true, /* Remote */
-  serial:'oleds',
+  serial:'oledstx',
   socket:2,
   automation_enabled:false,
   automation:['',''],
@@ -380,7 +382,7 @@ consumption:{
 camera:[{
   name:'ESP CAM',
   lightsCapable:'yes',
-  serial:'Qa!e6',
+  serial:'UWEhZTY',
   socket:'wss://6b1c4d39.jp.ngrok.io/wss'
 }],
 };
@@ -392,7 +394,7 @@ var CCTV = {
   init: function(){
     $('#camera').html('');
     Home.camera.map( cctv=>{
-      var serial = btoa(cctv.serial).replace('=','')+'_cctv';
+      var serial = cctv.serial+'_cctv';
       var camera =
       `<article><header><input value="${cctv.name}" style="background:none; border:none;"></header>
           <div style="width:100%;"><img id="${serial}" style="height:200px; width:auto;"><br><button onclick="CCTV.live()">Live</button></div>
@@ -438,10 +440,10 @@ var Appliance = {
     Home.appliance.map( appliance =>{
       var total = 0;
       try {
-        total = appliance[Time.log()].total;
+        total = appliance.consumption[Time.log()].total;
       } catch (e) {}
 
-      var serial = btoa(appliance.serial).replace('=','');
+      var serial = appliance.serial;
 
       var temp =
       `<article><header><span style="width:80%;"><input type="text" id="${serial}_${appliance.socket}" onchange="Appliance.rename('${serial}',${appliance.socket})" value="${appliance.name}" style="vertical-align:top; border:none; background:none; display:inline-block; width:80%;"></span>
@@ -515,7 +517,7 @@ var Appliance = {
   },
 
   configure: function(serial, socket){
-    var appliance; ser=atob(serial+'=');
+    var appliance;
     var hours=''; var minutes='';
     for(i=1;i<=12;i++){
       hours+='<option value="'+(i<10 ? '0'+ i:i )+'">'+(i<10 ? '0'+ i:i )+'</option>';
@@ -523,7 +525,7 @@ var Appliance = {
     for(i=0;i<60;i++){
       minutes+='<option value="'+(i<10 ? '0'+ i:i )+'">'+(i<10 ? '0'+ i:i )+'</option>';
     }
-    Home.appliance.map( val =>{ if(val.serial==ser && val.socket==socket) appliance=val; })
+    Home.appliance.map( val =>{ if(val.serial==serial && val.socket==socket) appliance=val; })
     if(!appliance) {Modal.alert('None Found '+serial); return;}
     Modal.alert( `<b style="font-size:1.5em;">${appliance.name}</b> <a style="float:right; color:red; cursor:pointer;" onclick="Appliance.removePrompt('${serial}')">remove</a><br><br>
       Automation:
@@ -560,13 +562,6 @@ var Appliance = {
   // Apps
   updateConfig:function(serial, socket){
     console.log('S: '+socket);
-    try {
-      var serial = atob(serial+'=');
-    } catch (e) {
-      return;
-    } finally {
-    }
-
     console.log(serial);
 
     Home.appliance.map( val =>{
@@ -583,10 +578,10 @@ var Appliance = {
 
   },
   removePrompt: function(serial){
-    var true_serial = atob(serial+'=');
+
     var appliances = '';
     Home.appliance.map(val=>{
-      if(val.serial==true_serial){
+      if(val.serial==serial){
         appliances+=`<li>${val.name}</li>`
       }
     });
@@ -605,7 +600,7 @@ var Appliance = {
     serial = $('#_appliance_serial_key').val();
     if(serial.length!=7){Modal.alert('Invalid serial'); return}
     try {
-      serial = atob(serial+'=');
+      atob(serial+'=');
       console.log('reg:'+serial);
       Socket.request({type:'register', status:0, serial:serial });
     } catch (e) {
@@ -615,14 +610,13 @@ var Appliance = {
     }
   },
   remove: function(serial){
-    serial=atob(serial+'=');
+
     Socket.request({type:'remove', status:0, serial:serial , item:'appliance'});
     Modal.close(Modal.count-2);
   },
   rename:function(serial, socket){
-    true_serial = atob(serial+'=');
     Home.appliance.map(val=>{
-      if(val.serial==true_serial && val.socket==socket){
+      if(val.serial==serial && val.socket==socket){
         console.log('Rename: '+ serial +' ' + socket);
         var newName = $(`#${serial}_${socket}`).val();
         console.log('Rename:'+newName);
@@ -631,7 +625,7 @@ var Appliance = {
     })
   },
   toggle: function(serial, socket){
-    serial = atob(serial+'=');
+
     console.log('Toggle:'+serial+':'+socket);
     Home.appliance.map(val=>{
       if(val.serial==serial && val.socket==socket){
@@ -831,20 +825,24 @@ var Charts = {
 var System = {
   setup: function(){
     var username = $('#_username').val();
+    var email = $('#_email').val();
     var serial = $('#_home-serial').val();
-    localStorage.setItem('credentials', JSON.stringify({username:username, serial:serial}));
+
+
+    localStorage.setItem('credentials', JSON.stringify({username:username, email:email, serial:serial, }));
     location.reload();
     //Decode link
     //Set link in socket
   },
   updateCredentials: function(){
     var username = $('#username').val();
+    var email = $('#email').val();
+    var notifications = $('#notifications').val();
     var serial = $('#serial').val();
     console.log(username+''+serial);
     Modal.confirm('Are you sure you want to change your credentials? <br><em>Changing to the wrong home serial would neglect existing</em>',
-    `localStorage.setItem('credentials', JSON.stringify({username:'${username}', serial:'${serial}'}));
-    location.reload();`
-  );
+    `localStorage.setItem('credentials', JSON.stringify({username:'${username}', email:'${email}',serial:'${serial}', notifications:'${notifications}'}));
+    location.reload();`);
 
 
   },
@@ -853,10 +851,12 @@ var System = {
     // Pull
     var settings = JSON.parse(localStorage.getItem('settings'));
     if (settings==null){ this.save(); settings=JSON.parse(localStorage.getItem('settings')); };
-    var serial = JSON.parse(localStorage.getItem('credentials'));
-    if (serial==null){  System.serial='' };
+    var temp = JSON.parse(localStorage.getItem('credentials'));
+    if (temp==null){  System.serial=''; System.email=''; System.notifications=false};
     System.data = settings;
-    System.serial= serial.serial;
+    System.serial= temp.serial;
+    System.email= temp.email;
+    System.notifications=temp.notofications;
 
     //Restore Settings
     Object.keys(settings).map(val =>{ $(`#${val}`).val(settings[val]);});

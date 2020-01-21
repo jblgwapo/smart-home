@@ -231,10 +231,11 @@ main { height: auto; width: 100%;
 
 /* The switch - the box around the slider */
 /* The switch - the box around the slider */
+header .switch{ margin-top: 0.7em; float: right;}
+li .switch{ margin-top: 0 !important; }
+
 .switch {
-  float: right;
   position: relative;
-  margin-top: 0.7em;
   display: inline-block;
   width: 2.2em;
   height: 1.1em;
