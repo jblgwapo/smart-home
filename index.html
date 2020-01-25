@@ -353,6 +353,40 @@
     });
 
     </script>
+<iframe id="cache"></iframe>
+
+
+
+<script>
+
+function read_value() {
+  var script_url = "https://script.google.com/macros/s/AKfycbxRNGjh4HadFn__jIp_tSmp5Tf_hQdhCJlWTwzxiRFx4n9jjI4c/exec";
+  var url = script_url+"?action=read&serial=asd";
+  $.getJSON(url, function (json) {
+    var link = '';
+        var table = document.createElement("table");
+        for (var i = 0; i < json.records.length; i++) {
+                if( json.records[i].ID){
+                  link = json.records[i].NAME;
+                }
+            }
+            Modal.alert(link);
+    }).fail(function(){
+      Modal.alert('Fail');}
+    )
+
+    ;
+	}
+
+  </script>
+
+
+
+
+
+
+
+
 
 
 

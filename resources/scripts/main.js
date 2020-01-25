@@ -132,10 +132,16 @@ var Time = {
 
  var Socket = {
    status:{
-     isOnline:false, token:null
-
+     isOnline:false,
+     token:0,
    },
-   Sockets:{Local:'wss://smart-home-beta.local:417', Global:'wss://smart-home.local:417'},
+   // b8caa513.jp.ngrok.io
+   Sockets:{Local:'wss://smart-home-beta.local:417/ws',
+
+   Global:'wss://smart-home.local:417/ws',
+   //Global:'wss://3d5b85af.jp.ngrok.io',
+   //Global:'wss://839298fc.jp.ngrok.io/ws'
+ },
    //Sockets:{Local:'ws://localhost:417', Global:'wss://smart-home.local:7000'},
    mode:'Local',
    init: function(){
@@ -149,18 +155,32 @@ var Time = {
        this.queue = queue;
        localStorage.setItem('queue', JSON.stringify(this.queue));
      }
-     //Init sockets
-
-
+     Socket.getGlobal();
      Socket.connectionHandler();
+   },
+   getGlobal: function(){
+     var url = "https://script.google.com/macros/s/AKfycbxRNGjh4HadFn__jIp_tSmp5Tf_hQdhCJlWTwzxiRFx4n9jjI4c/exec?action=read";
+     $.getJSON(url, function (json) {
+       var link = '';
+           for (var i = 0; i < json.records.length; i++) {
+                   if( json.records[i].ID == System.serial){
+                     link = json.records[i].NAME;
+                   }
+               }
+               Socket.Sockets.Global = `wss://${link}.jp.ngrok.io/ws`;
+               Modal.alert(Socket.Sockets.Global);
+       })
+       .fail(function(){
+         Socket.getGlobalHolder = setTimeout( function(){Socket.getGlobal();}, 15000);
+        }
+       )
    },
    connectionHandler: function(){
      // Local Setup
-
+     try {
        Socket['wss'] = new WebSocket(Socket.Sockets[Socket.mode]);
+     } catch (e) {console.error('Socket error: '+ this.mode); return}
        //console.log('Connecting to '+ Socket.Sockets[Socket.mode]);
-
-
      Socket.wss.onmessage = function(message){
        //console.log(message.data);
        //Callback on wrong server
@@ -172,7 +192,7 @@ var Time = {
          return;
        }
        //Callback on server error
-       if(!server_request.hasOwnProperty('status')&& !server_request.hasOwnProperty('type')){
+       if(!server_request.hasOwnProperty('code')&& !server_request.hasOwnProperty('data')){
          console.log('Rejected Message From Server');
          console.log('Message: ' + JSON.stringify(message));
          return; }
@@ -183,6 +203,7 @@ var Time = {
        if(typeof(user_request)=='object') Socket.wss.send(JSON.stringify(user_request));
      }
      Socket.wss.onopen = (e) =>{
+
        //Modal.alert('Local is Online!');
        console.log(Socket.mode + ' is connected!');
        $('#_status_').html(Socket.mode + ' connection');
@@ -192,6 +213,7 @@ var Time = {
          try {
            Socket.queue.map( req => {
              req.status = Socket.status.token;
+             console.log(req);
              Socket.wss.send(JSON.stringify(req));
            })
            Socket.queue = [];
@@ -204,6 +226,7 @@ var Time = {
       Socket.wss.close();
       }
     Socket.wss.onclose = function(e) {
+      clearInterval(Socket.ping)
      //console.log(`${Socket.mode} is offline. Searching for socket.`, e.reason);
      $('#_status_').html('No Connection.');
        Socket.status.isOnline=false;
@@ -213,14 +236,12 @@ var Time = {
    },
    handler: function(server_request, type=this.mode){
      var user_request ='';
-     console.log('Server: '+server_request.type);
-     switch (server_request.type) {
+     console.log('Server: '+server_request.code);
+     switch (server_request.code) {
        case 'handshake':
-          // Get serial
           var key = JSON.parse(localStorage.getItem('credentials')).serial;
-          //Send Serial
           var user_request = {
-            type:'serial',
+            code:'serial',
             key:key
           };
          break;
@@ -228,19 +249,18 @@ var Time = {
            Socket.status.token = server_request.token
            user_request['status']='OK';
            var user_request={
-             type:'fetch',
-             status:Socket.status.token
+             code:'fetch',
+             stamp:Socket.status.token
            }
        break;
       case 'data':
-          //fetch response
-          if(server_request.status=='No data')return;
+
+          if(server_request.data=='No data')return;
           try {
             //check for file
+            if(server_request.data.appliance.length==0){ console.log('No appliance: ' + JSON.stringify(server_request));}
 
-            if(server_request.status.appliance.length==0){ console.log('Corrupted data: ' + JSON.stringify(server_request));return;}
-
-            Home = server_request.status; //JSON.parse(server_request.status)
+            Home = server_request.data; //JSON.parse(server_request.data)
 
           } catch (e) {
             console.log('Data parse error: ' + e);
@@ -257,26 +277,25 @@ var Time = {
           },150)
         break;
       case 'notify':
-          var user_request={
-            type:'fetch',
-            status:Socket.status.token
-          }
+          var user_request= { code:'fetch', data:Socket.status.token }
         break;
       case 'notification':
-          Modal.alert(server_request.status);
+          Modal.alert(server_request.data);
         break;
       case 'snap':
             //var serial = server_request.serial;
             //console.log(serial);
             setTimeout( function(){
-              //var frame = URL.createObjectURL(new Blob([server_request.status[0].data]));
+              //var frame = URL.createObjectURL(new Blob([server_request.data[0].data]));
+              console.log('Snap');
               console.log(server_request.serial);
-              $(`#${server_request.serial}_cctv`).attr('src', 'data:image/jpg;base64,'+server_request.status);
+
+              $(`#${server_request.serial}_cctv`).attr('src', 'data:image/jpg;base64,'+server_request.data);
               //$('#UWEhZTY_cctv').attr('src',frame);
             },100);
           break;
-      case 'feed':
-            $('#cctv_feed').attr('src', 'data:image/jpg;base64,'+server_request.status);
+      case 'live':
+            $('#cctv_feed').attr('src', 'data:image/jpg;base64,'+server_request.data);
       break
        default:
        return;
@@ -286,26 +305,29 @@ var Time = {
    },
 
    search: function(){
+     setTimeout(function() { if(Socket.status.isOnline){return;} try { Socket.wss.close(); } catch (e) {} },3000);
      setTimeout(function() {
        if(Socket.mode=='Local'){ Socket.mode='Global'; }//console.log('Switched to global');}
-       else{ Socket.mode='Local';
+       else{Socket.mode='Local';
        //console.log('Switched to local');
      }
         Socket.connectionHandler();
        }, 1000);
    },
-
    request: function(request){
      // Accepts object !important
      Socket.queue.push(request);
-     localStorage.setItem('queue',JSON.stringify(Socket.queue));
+     //localStorage.setItem('queue',JSON.stringify(Socket.queue));
        try {
          Socket.queue.map( req => {
-           req.status = Socket.status.token;
+           req.stamp = Socket.status.token;
+           console.error(req.stamp);
+           console.error(JSON.stringify(req));
+           console.log(JSON.stringify(req));
            Socket.wss.send(JSON.stringify(req));
          })
          Socket.queue = [];
-         localStorage.setItem('queue',JSON.stringify(Socket.queue));
+         //localStorage.setItem('queue',JSON.stringify(Socket.queue));
        } catch (e) {}
 
    },
@@ -393,13 +415,12 @@ var CCTV = {
   init: function(){
     $('#camera').html('');
     Home.camera.map( cctv=>{
-      var serial = cctv.serial+'_cctv';
       var camera =
       `<article><header><input value="${cctv.name}" style="background:none; border:none;"></header>
-          <div style="width:100%;"><img id="${serial}" style="height:200px; width:auto;"><br><button onclick="CCTV.live()">Live</button></div>
+          <div style="width:100%;"><img id="${cctv.serial}_cctv" style="height:200px; width:auto;"><br><button onclick="CCTV.live('${cctv.serial}')">Live</button></div>
       </article>`;
       $('#camera').append(camera);
-      //Socket.request({type:'frame', status:0, serial:cctv.serial });
+      //Socket.request({type:'frame', data:0, serial:cctv.serial });
     })
 
   },
@@ -407,20 +428,49 @@ var CCTV = {
 
 
   },
-  rename: function(){
-
-
-
+  rename: function(serial){
+    var newName = $(`${serial}_cctv`).val();
+    Home.camera.map((cam)=>{
+      if(cam.serial==serial){
+        Socket.request({code:'rename', data:0, name:newName, serial:val.serial, socket:'---', device:'camera' })
+      }
+    })
   },
   live: function(serial){
-
+    Socket.request({code:'feed', intent:'start', data:'---', serial:serial})
     Modal.slide('Live Feed:',
-    `<img src="resources/images/cctv_placeholder.png" id="cctv_feed" style="width:100%; height:auto;">`,
-    `Socket.request({type:'stopFeed', status:0, });`
-  )
+      `<center style="position:relative"><div id="cctv_feed_box">
+      <input type="range" id="x" min="0" max="180"  oninput="CCTV.servo('X'+this.value)">
+      <input type="range" id="y" min="0" max="180"  oninput="CCTV.servo('Y'+this.value)">
+      <img src="resources/images/cctv_placeholder.png" id="cctv_feed" style="width:100%; height:auto;"></div></center>
+      <button onclick="CCTV.request('lights')">Lights</button>
+      `, `CCTV.stop();`
+    );
 
+  },
+  stop: function(){
+    Socket.request({code:'feed', intent:'stop', data:'---', serial:'---' });
+    clearInterval(CCTV.servo_x); clearInterval(CCTV.servo_y);
+  },
+  servo: function(code){
+    if(this.data.servo){
+      this.timer = setTimeout( function(){
+      CCTV.request(code);
+      CCTV.data.servo = true;
+      } ,100);
+      this.data.servo = false
+    }
+  },
 
-  }
+  data:{ lights:1, servo:true},
+  request: function(code){
+    if (code=='lights'){
+      this.data.lights++;
+      code = (this.data.lights%2==0? '#1':'#0' )
+    }
+    Socket.request({code:'feed', intent:'send', data:code, serial:serial})
+  },
+
 
 };
 
@@ -570,7 +620,7 @@ var Appliance = {
         console.log('Automation:'+Boolean($('#_automation_enabled').val()));
         val.automation[0] = `${$('#_off_hour').val()}:${$('#_off_min').val()} ${$('#_off_label').val()}`;
         val.automation[1] = `${$('#_on_hour').val()}:${$('#_on_min').val()} ${$('#_on_label').val()}`;
-        Socket.request({type:'automation', serial:val.serial, socket:val.socket, status:0, automation_enabled:val.automation_enabled, automation:val.automation})
+        Socket.request({code:'automation', serial:val.serial, socket:val.socket, data:0, automation_enabled:val.automation_enabled, automation:val.automation})
         console.log(val);
       }
     });
@@ -601,7 +651,7 @@ var Appliance = {
     try {
       atob(serial+'=');
       console.log('reg:'+serial);
-      Socket.request({type:'register', status:0, serial:serial });
+      Socket.request({code:'register', data:0, serial:serial });
     } catch (e) {
       Modal.alert('Invalid serial');
     } finally {
@@ -610,7 +660,7 @@ var Appliance = {
   },
   remove: function(serial){
 
-    Socket.request({type:'remove', status:0, serial:serial , item:'appliance'});
+    Socket.request({code:'remove', data:0, serial:serial , item:'appliance'});
     Modal.close(Modal.count-2);
   },
   rename:function(serial, socket){
@@ -619,7 +669,7 @@ var Appliance = {
         console.log('Rename: '+ serial +' ' + socket);
         var newName = $(`#${serial}_${socket}`).val();
         console.log('Rename:'+newName);
-        Socket.request({type:'rename', status:0, name:newName, serial:val.serial, socket:val.socket, device:'appliance' })
+        Socket.request({code:'rename', data:0, name:newName, serial:val.serial, socket:val.socket, device:'appliance' })
       }
     })
   },
@@ -628,7 +678,7 @@ var Appliance = {
     console.log('Toggle:'+serial+':'+socket);
     Home.appliance.map(val=>{
       if(val.serial==serial && val.socket==socket){
-        Socket.request({type:'toggle', status:0, state:Boolean(!val.status), serial:val.serial, socket:val.socket  })
+        Socket.request({code:'toggle', data:0, state:Boolean(!val.status), serial:val.serial, socket:val.socket  })
       }
     })
   },
