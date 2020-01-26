@@ -136,7 +136,7 @@ var Time = {
      token:0,
    },
    // b8caa513.jp.ngrok.io
-   Sockets:{Local:'wss://smart-home-beta.local:417/ws',
+   Sockets:{Local:'wss://smart-home.local:417/ws',
 
    Global:'wss://smart-home.local:417/ws',
    //Global:'wss://3d5b85af.jp.ngrok.io',
@@ -234,6 +234,7 @@ var Time = {
        //Socket.search();
      };
    },
+
    handler: function(server_request, type=this.mode){
      var user_request ='';
      console.log('Server: '+server_request.code);
@@ -259,9 +260,7 @@ var Time = {
           try {
             //check for file
             if(server_request.data.appliance.length==0){ console.log('No appliance: ' + JSON.stringify(server_request));}
-
             Home = server_request.data; //JSON.parse(server_request.data)
-
           } catch (e) {
             console.log('Data parse error: ' + e);
             console.log( JSON.stringify(server_request));
@@ -321,8 +320,8 @@ var Time = {
        try {
          Socket.queue.map( req => {
            req.stamp = Socket.status.token;
-           console.error(req.stamp);
-           console.error(JSON.stringify(req));
+           console.log(req.stamp);
+           console.log(JSON.stringify(req));
            console.log(JSON.stringify(req));
            Socket.wss.send(JSON.stringify(req));
          })
@@ -422,11 +421,28 @@ var CCTV = {
       $('#camera').append(camera);
       //Socket.request({type:'frame', data:0, serial:cctv.serial });
     })
-
+    $('#camera').append('<article><header>Add a CCTV<button onclick="CCTV.addWindow()">ADD</button></header><b>Instructions:</b><p>1. Plug your device<br>2. Press the add button above this instructions.<br>3. Insert the serial key.<br>4. Wait for the confirmation.</p></article>');
   },
   update: function(serial, data){
 
 
+  },
+  addWindow: function(){
+    Modal.confirm('<b>Insert CCTV Serial Key</b><br><input id="_cctv_serial_key"></input>', 'CCTV.add()');
+  },
+  //Rename, remove and toggle
+  add: function(){
+    serial = $('#_cctv_serial_key').val();
+    if(serial.length!=7){Modal.alert('Invalid serial'); return}
+    try {
+      Socket.request({code:'register', data:0, serial:serial, device:'appliance' });
+    } catch (e) {
+      Modal.alert('Invalid serial');
+    }
+  },
+  remove: function(serial){
+    Socket.request({code:'remove', data:0, serial:serial , item:'cctv'});
+    Modal.close(Modal.count-2);
   },
   rename: function(serial){
     var newName = $(`${serial}_cctv`).val();
@@ -477,9 +493,6 @@ var CCTV = {
 
 
 
-
-
-
 //OBJ for appliances
 
 var Appliance = {
@@ -496,7 +509,7 @@ var Appliance = {
 
       var temp =
       `<article><header><span style="width:80%;"><input type="text" id="${serial}_${appliance.socket}" onchange="Appliance.rename('${serial}',${appliance.socket})" value="${appliance.name}" style="vertical-align:top; border:none; background:none; display:inline-block; width:80%;"></span>
-      <label class="switch"><input type="checkbox" ${(appliance.status==true?'checked':'')} onchange="Appliance.toggle('${serial}',${appliance.socket})"><span class="slider"></span></label></header>
+      <label class="switch" ${(appliance.type=="Monitor"? 'style="display:none;"':'')}><input type="checkbox" ${(appliance.status==true?'checked':'')} onchange="Appliance.toggle('${serial}',${appliance.socket})"><span class="slider"></span></label></header>
       <lu><li>Serial Key: ${ serial }:${ appliance.socket }</li>
       <li>Type: ${appliance.type}</li>
       <li>Consumption: ${ total } Watts today</li><br>
@@ -512,8 +525,6 @@ var Appliance = {
       $('#appliances').append(temp);
     });
     $('#appliances').append('<article><header>Add a Smart Socket<button onclick="Appliance.addWindow()">ADD</button></header><b>Instructions:</b><p>1. Plug your device<br>2. Press the add button above this instructions.<br>3. Insert the serial key.<br>4. Wait for the confirmation.</p></article>');
-
-
   },
   names: function(){
     var name = [];
@@ -651,7 +662,7 @@ var Appliance = {
     try {
       atob(serial+'=');
       console.log('reg:'+serial);
-      Socket.request({code:'register', data:0, serial:serial });
+      Socket.request({code:'register', data:0, serial:serial, device:'appliance' });
     } catch (e) {
       Modal.alert('Invalid serial');
     } finally {
@@ -924,6 +935,7 @@ var System = {
 
     // Initialize
     System.exec();
+    System.getPrices();
     // Tab Functionalities
     $('nav li').click(function(){
       var target = $(this).index();
@@ -974,6 +986,31 @@ var System = {
   location.reload();
   console.log('Reload');
   },
+  users: function(){
+
+
+    Modal.slide('Logged devices', '');
+
+  },
+  getPrices: function(){
+    var url = "https://script.google.com/macros/s/AKfycbyucHu8ueH2GEzJWZV-azOiqShX2Um3t2MT00hM/exec?action=read";
+    $.getJSON(url, function (json) {
+      var prices = '';
+          json.records.map(val=>{
+            prices+=`<option value="${val.NAME}">${val.ID} (${val.NAME} pesos/kW)</option>`
+          })
+            prices+='<option value="0">Custom</option>';
+              $('#priceSelector').html(prices);
+
+      })
+      .fail(function(){
+        System.prices = setTimeout( function(){System.getPrices();}, 15000);
+       }
+      )
+  },
+
+
+
   //End of methods
 
 };

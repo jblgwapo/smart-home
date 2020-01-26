@@ -202,6 +202,7 @@
             <li>
               Electrical Cost/Kw (Price):
               <input type="number" class="settings" id="cost" value="9.96">
+              <select id="priceSelector"></select>
             </li>
 
           </lu><br>
@@ -215,11 +216,10 @@
               Name: <input type="text" id="username" value="">
             </li>
             <li>
-              Email: <input type="text" id="email" value="">
-              Notifications <label class="switch"><input type="checkbox" id="notifications"><span class="slider"></span></label>
+              Home Key: <input type="text" id="serial" value="" >
             </li>
             <li>
-              Home Key: <input type="text" id="serial" value="" >
+              <button onclick='System.users()'>Logged Devices</button>
             </li>
             <li>
               <button onclick="System.updateCredentials()">Save</button>
