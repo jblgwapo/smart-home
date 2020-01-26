@@ -168,10 +168,9 @@ var Time = {
                    }
                }
                Socket.Sockets.Global = `wss://${link}.jp.ngrok.io/ws`;
-               Modal.alert(Socket.Sockets.Global);
        })
        .fail(function(){
-         Socket.getGlobalHolder = setTimeout( function(){Socket.getGlobal();}, 15000);
+         Socket.getGlobalHolder = setTimeout( function(){Socket.getGlobal();}, 5000);
         }
        )
    },

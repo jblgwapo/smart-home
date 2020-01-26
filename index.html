@@ -243,10 +243,12 @@
             Aldrin John O. Manalansan<br>
             Romiel Jan G. Sambat<br>
             Remz Anne P. Tolentino<br>
+            Regina Angela P. Tolentino<br>
           </p><br>
           <p>
             Powered By:<br>
             <img src="resources/images/node.png" alt="nodejs" style="height:50px;">
+            <img src="resources/images/ngrok.png" alt="ESP" style="height:50px;">
             <img src="resources/images/py.png" alt="python" style="height:50px;">
             <img src="resources/images/cpp.png" alt="c++" style="height:50px;">
             <img src="resources/images/rpi.png" alt="Raspberry Pi" style="height:50px;">
@@ -353,42 +355,5 @@
     });
 
     </script>
-<iframe id="cache"></iframe>
-
-
-
-<script>
-
-function read_value() {
-  var script_url = "https://script.google.com/macros/s/AKfycbxRNGjh4HadFn__jIp_tSmp5Tf_hQdhCJlWTwzxiRFx4n9jjI4c/exec";
-  var url = script_url+"?action=read&serial=asd";
-  $.getJSON(url, function (json) {
-    var link = '';
-        var table = document.createElement("table");
-        for (var i = 0; i < json.records.length; i++) {
-                if( json.records[i].ID){
-                  link = json.records[i].NAME;
-                }
-            }
-            Modal.alert(link);
-    }).fail(function(){
-      Modal.alert('Fail');}
-    )
-
-    ;
-	}
-
-  </script>
-
-
-
-
-
-
-
-
-
-
-
   </body>
 </html>
