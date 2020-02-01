@@ -209,7 +209,7 @@ var Time = {
    },
    // b8caa513.jp.ngrok.io
    Sockets:{
-     Local:'wss://smart-home-beta.local:417/ws',
+     Local:'wss://smart-home.local:417/ws',
      Global:'wss://smart-home.local:417/ws',
    //Global:'wss://3d5b85af.jp.ngrok.io',
    //Global:'wss://839298fc.jp.ngrok.io/ws'
@@ -558,7 +558,7 @@ var CCTV = {
     Socket.request({code:'feed', intent:'start', data:'---', serial:serial})
     Modal.slide('Live Feed:',
       `<center style="position:relative"><div id="cctv_feed_box">
-      <input type="range" id="x" min="0" max="180"  oninput="CCTV.servo('X'+this.value)">
+      <input type="range" id="x" min="0" max="180"  oninput="CCTV.servo('X'+(180-this.value))">
       <input type="range" id="y" min="0" max="180"  oninput="CCTV.servo('Y'+this.value)">
       <img src="resources/images/cctv_placeholder.png" id="cctv_feed" style="width:100%; height:auto;"></div></center>
       <button onclick="CCTV.request('lights')">Lights</button>
@@ -1082,6 +1082,10 @@ var System = {
     System.login = true;
     System.serial= temp.serial;
     System.userdata= temp;
+
+    $('#username_display').html(this.userdata.username);
+    $('#serial_display').html(this.userdata.serial);
+
 
     var temp = JSON.parse(localStorage.getItem('token'));
     if (temp==null){ /*System destroy*/ };

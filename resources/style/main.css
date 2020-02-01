@@ -356,7 +356,7 @@ Copyright 2019-2020
 #cctv_feed{
   width:100%;
   height:auto;
-  -webkit-transform: scaleY(-1);
+  -webkit-transform:rotate(180deg);
 
 }
 
