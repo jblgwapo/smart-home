@@ -179,7 +179,7 @@
         <article>
           <header>Display</header>
 
-          <lu>
+          <ul>
             <li>Accent:
               <select class="settings" id="theme" >
                 <option value="blue">Blue</option>
@@ -205,33 +205,26 @@
               <select id="priceSelector"></select>
             </li>
 
-          </lu><br>
+          </ul><br>
           <button>Save Settings</button>
         </article>
 
         <article>
           <header>Credentials </header>
-          <lu>
+          <ul>
             <li>
-              Name: <input type="text" id="username" value="">
+              Name: <span id="username_display"></span>
             </li>
             <li>
-              Home Key: <input type="text" id="serial" value="" >
-            </li>
-            <li>
-              <button onclick='System.users()'>Logged Devices</button>
-            </li>
-            <li>
-              <button onclick="System.updateCredentials()">Save</button>
-            </li>
-            <li>
-              <em>Please don't share your serial keys to anyone.</em>
+              Home Key: <span id="serial_display"></span><br>
+              <em>Please dont share your serial keys to anyone.</em>
             </li>
             <li>
               Status: <span id="_status_"></span>
-            <li>
-          </lu>
-          <a href="https://smart-home-beta.local:443">Get certificate</a>
+            </li>
+          </ul>
+          <br>
+          <button onclick='System.users()'>Logged Devices</button>
         </article>
 
         <article>

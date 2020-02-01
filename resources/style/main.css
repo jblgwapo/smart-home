@@ -150,7 +150,7 @@ main { height: auto; width: 100%;
                                                           float:right;
                                                           font-size: 0.707em;
                                                         }
-                      article lu {  border-top:1px solid  var(--line-color); list-style-type: none;}
+                      article ul {  border-top:1px solid  var(--line-color); list-style-type: none;}
                                   article li { padding-top: 0.3em; padding-bottom: 0.3em; font-size:110%; border-bottom: 1px solid rgba(100,100,100,0.17);  position: relative;  }
                       .third {
                       width: 30% !important; display: inline-block;
@@ -231,7 +231,7 @@ main { height: auto; width: 100%;
 
 /* The switch - the box around the slider */
 /* The switch - the box around the slider */
-header .switch{ margin-top: 0.7em; float: right;}
+header .switch{ float: right;}
 li .switch{ margin-top: 0 !important; }
 
 .switch {
@@ -356,6 +356,7 @@ Copyright 2019-2020
 #cctv_feed{
   width:100%;
   height:auto;
+  -webkit-transform: scaleY(-1);
 
 }
 
@@ -376,8 +377,8 @@ input[type='range']  { -webkit-appearance: none;  appearance: none; background: 
 input[type='range']:hover { opacity:1;}
 input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; background: var(--accent); cursor: pointer; }
 input[type='range']::-moz-range-thumb { width: 20px; height: 20px; background: var(--accent); cursor: pointer; }
-#x{ bottom:0%; left:1%;  height:20px; width:95%;}
-#y{ top:41%; right:calc(-32%); width:70%; height:20px !important; -webkit-transform:rotate(90deg); }
+#x{ bottom:0%; left:1%;  height:20px; width:95%; z-index:9999;}
+#y{ top:41%; right:calc(-32%); width:70%; height:20px !important; -webkit-transform:rotate(90deg);  z-index:9999;}
 
 
 

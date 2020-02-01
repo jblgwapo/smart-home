@@ -1,8 +1,90 @@
 $(document).ready(function(){
+  //init
+    (function () {
+        'use strict';
+
+        var module = {
+            options: [],
+            header: [navigator.platform, navigator.userAgent, navigator.appVersion, navigator.vendor, window.opera],
+            dataos: [
+                { name: 'Windows Phone', value: 'Windows Phone', version: 'OS' },
+                { name: 'Windows', value: 'Win', version: 'NT' },
+                { name: 'iPhone', value: 'iPhone', version: 'OS' },
+                { name: 'iPad', value: 'iPad', version: 'OS' },
+                { name: 'Kindle', value: 'Silk', version: 'Silk' },
+                { name: 'Android', value: 'Android', version: 'Android' },
+                { name: 'PlayBook', value: 'PlayBook', version: 'OS' },
+                { name: 'BlackBerry', value: 'BlackBerry', version: '/' },
+                { name: 'Macintosh', value: 'Mac', version: 'OS X' },
+                { name: 'Linux', value: 'Linux', version: 'rv' },
+                { name: 'Palm', value: 'Palm', version: 'PalmOS' }
+            ],
+            databrowser: [
+                { name: 'Chrome', value: 'Chrome', version: 'Chrome' },
+                { name: 'Firefox', value: 'Firefox', version: 'Firefox' },
+                { name: 'Safari', value: 'Safari', version: 'Version' },
+                { name: 'Internet Explorer', value: 'MSIE', version: 'MSIE' },
+                { name: 'Opera', value: 'Opera', version: 'Opera' },
+                { name: 'BlackBerry', value: 'CLDC', version: 'CLDC' },
+                { name: 'Mozilla', value: 'Mozilla', version: 'Mozilla' }
+            ],
+            init: function () {
+                var agent = this.header.join(' '),
+                    os = this.matchItem(agent, this.dataos),
+                    browser = this.matchItem(agent, this.databrowser);
+
+                return { os: os, browser: browser };
+            },
+            matchItem: function (string, data) {
+                var i = 0,
+                    j = 0,
+                    html = '',
+                    regex,
+                    regexv,
+                    match,
+                    matches,
+                    version;
+
+                for (i = 0; i < data.length; i += 1) {
+                    regex = new RegExp(data[i].value, 'i');
+                    match = regex.test(string);
+                    if (match) {
+                        regexv = new RegExp(data[i].version + '[- /:;]([\\d._]+)', 'i');
+                        matches = string.match(regexv);
+                        version = '';
+                        if (matches) { if (matches[1]) { matches = matches[1]; } }
+                        if (matches) {
+                            matches = matches.split(/[._]+/);
+                            for (j = 0; j < matches.length; j += 1) {
+                                if (j === 0) {
+                                    version += matches[j] + '.';
+                                } else {
+                                    version += matches[j];
+                                }
+                            }
+                        } else {
+                            version = '0';
+                        }
+                        return {
+                            name: data[i].name,
+                            version: parseFloat(version)
+                        };
+                    }
+                }
+                return { name: 'unknown', version: 0 };
+            }
+        };
+
+        var e = module.init();
+        System.device = {
+            os:`${e.os.name} ${e.os.version}`, browser:e.browser.name
+        }
+    }());
 
 
-console.log(btoa('jale\''));
-console.log(atob(''));
+
+
+
   // Setup Infos
 
   const isIos = () => {
@@ -18,18 +100,8 @@ console.log(atob(''));
     //Modal.slide('Install the app first', 'The app must be installed first before you can run it.');  return;
   }
 
-  var data = JSON.parse(localStorage.getItem('credentials'));
-  if( data==null ){ Modal.slide('Let\'s Get Started.','User Name:<input type="text" id="_username"><br>Home Serial Key<input type="text" id="_home-serial"><br><button onclick="System.setup()">Submit</button>', 'Modal.alert(\'Please Complete the details\')', false); return;}
-    $('#username').val(data.username); $('#serial').val(data.serial); $('#email').val(data.email); $('#notifications').val(data.notifications);
-
-
 System.init();
-Appliance.init();
-Charts.init();
-  // Graphs
 
-Socket.init();
-CCTV.init();
 
 //console.log(Appliance.weeklyChartData(-1));
 
@@ -136,9 +208,9 @@ var Time = {
      token:0,
    },
    // b8caa513.jp.ngrok.io
-   Sockets:{Local:'wss://smart-home.local:417/ws',
-
-   Global:'wss://smart-home.local:417/ws',
+   Sockets:{
+     Local:'wss://smart-home-beta.local:417/ws',
+     Global:'wss://smart-home.local:417/ws',
    //Global:'wss://3d5b85af.jp.ngrok.io',
    //Global:'wss://839298fc.jp.ngrok.io/ws'
  },
@@ -202,6 +274,19 @@ var Time = {
        if(typeof(user_request)=='object') Socket.wss.send(JSON.stringify(user_request));
      }
      Socket.wss.onopen = (e) =>{
+       var user_request = {
+         code:( System.login ? 'serial' : 'login' ),
+         key:System.serial,
+         userdata:System.userdata
+       };
+       Socket.wss.send(JSON.stringify(user_request));
+       if(System.login==false){
+         Modal.slideOut(0);
+         Appliance.init();
+         Charts.init();
+         CCTV.init();
+       }
+
 
        //Modal.alert('Local is Online!');
        console.log(Socket.mode + ' is connected!');
@@ -225,7 +310,6 @@ var Time = {
       Socket.wss.close();
       }
     Socket.wss.onclose = function(e) {
-      clearInterval(Socket.ping)
      //console.log(`${Socket.mode} is offline. Searching for socket.`, e.reason);
      $('#_status_').html('No Connection.');
        Socket.status.isOnline=false;
@@ -239,19 +323,29 @@ var Time = {
      console.log('Server: '+server_request.code);
      switch (server_request.code) {
        case 'handshake':
-          var key = JSON.parse(localStorage.getItem('credentials')).serial;
+          var credentials = JSON.parse(localStorage.getItem('credentials'));
           var user_request = {
-            code:'serial',
-            key:key
+            code:( System.login ? 'serial' : 'login' ),
+            key:System.serial,
+            userdata:System.userdata
           };
          break;
+      case 'login':
+            System.userdata.token = server_request.token;
+            localStorage.setItem('userdata',JSON.stringify(System.userdata))
+            location.reload();
+          break;
        case 'acknowledge':
            Socket.status.token = server_request.token
-           user_request['status']='OK';
            var user_request={
              code:'fetch',
              stamp:Socket.status.token
            }
+       break;
+       case 'destroy':
+            //Destroys localStorage
+            localStorage.clear();
+            window.location.reload();
        break;
       case 'data':
 
@@ -294,7 +388,15 @@ var Time = {
           break;
       case 'live':
             $('#cctv_feed').attr('src', 'data:image/jpg;base64,'+server_request.data);
-      break
+      break;
+      case 'devices':
+            var list = '';
+            System.logged_devices = server_request.data;
+            server_request.data.map(device=>{
+              list+=`<li style="padding:7px; font-size:1em; ${System.userdata.token==device.token? 'color:green;':''}" onclick="System.view_device('${device.token}')">${device.os}</li>`;
+            })
+            $('#logged_devices').html(`<ul>${list}</ul>`)
+      break;
        default:
        return;
      }
@@ -327,6 +429,10 @@ var Time = {
          Socket.queue = [];
          //localStorage.setItem('queue',JSON.stringify(Socket.queue));
        } catch (e) {}
+
+   },
+   register: function(){
+
 
    },
    queue:[],
@@ -432,12 +538,8 @@ var CCTV = {
   //Rename, remove and toggle
   add: function(){
     serial = $('#_cctv_serial_key').val();
-    if(serial.length!=7){Modal.alert('Invalid serial'); return}
-    try {
-      Socket.request({code:'register', data:0, serial:serial, device:'appliance' });
-    } catch (e) {
-      Modal.alert('Invalid serial');
-    }
+    if(serial.length!=8){Modal.alert('Invalid serial'); return}
+      Socket.request({code:'register', data:0, serial:serial, device:'cctv' });
   },
   remove: function(serial){
     Socket.request({code:'remove', data:0, serial:serial , item:'cctv'});
@@ -452,6 +554,7 @@ var CCTV = {
     })
   },
   live: function(serial){
+    this.data.serial = serial;
     Socket.request({code:'feed', intent:'start', data:'---', serial:serial})
     Modal.slide('Live Feed:',
       `<center style="position:relative"><div id="cctv_feed_box">
@@ -477,12 +580,13 @@ var CCTV = {
     }
   },
 
-  data:{ lights:1, servo:true},
+  data:{ lights:1, servo:true, serial:null},
   request: function(code){
     if (code=='lights'){
       this.data.lights++;
       code = (this.data.lights%2==0? '#1':'#0' )
     }
+    serial = this.data.serial;
     Socket.request({code:'feed', intent:'send', data:code, serial:serial})
   },
 
@@ -507,9 +611,11 @@ var Appliance = {
       var serial = appliance.serial;
 
       var temp =
-      `<article><header><span style="width:80%;"><input type="text" id="${serial}_${appliance.socket}" onchange="Appliance.rename('${serial}',${appliance.socket})" value="${appliance.name}" style="vertical-align:top; border:none; background:none; display:inline-block; width:80%;"></span>
+      `<article><header onclick="Appliance.rename('${serial}',${appliance.socket})">
+      <div style="height:0.5em; width:0.5em; background:${appliance.online?'green':'red'}; border-radius:0.5em; display:inline-block;"></div>
+      ${appliance.name}
       <label class="switch" ${(appliance.type=="Monitor"? 'style="display:none;"':'')}><input type="checkbox" ${(appliance.status==true?'checked':'')} onchange="Appliance.toggle('${serial}',${appliance.socket})"><span class="slider"></span></label></header>
-      <lu><li>Serial Key: ${ serial }:${ appliance.socket }</li>
+      <ul><li>Serial Key: ${ serial }:${ appliance.socket }</li>
       <li>Type: ${appliance.type}</li>
       <li>Consumption: ${ total } Watts today</li><br>
       <li>Automation: ${(appliance.automation_enabled ? 'enabled' : 'disabled')}
@@ -518,7 +624,7 @@ var Appliance = {
       <li>Turn on every: ${(appliance.automation_enabled ? appliance.automation[1] : 'disabled')}</li>
       <li>Turn off every: ${(appliance.automation_enabled ? appliance.automation[0] : 'disabled')}</li>
 
-      </lu><br>
+      </ul><br>
       <button onclick="Appliance.configure('${(serial)}',${appliance.socket})" style=" font-size:0.7em;">Configure</button>
       </article>`;
       $('#appliances').append(temp);
@@ -785,9 +891,15 @@ var Charts = {
       series: data.total,
       xaxis: { categories: [], labels:{show:true}},
       legend:{position:'bottom'},
-      plotOptions:{pie:{donut:{labels:{show:true,total:{showAlways:true,show:true}}}}},
+      plotOptions:{pie:{donut:{labels:{show:true,total:{showAlways:true,show:true,
+        formatter:function(w){
+          var val = w.globals.seriesTotals.reduce((a, b) => {
+              return a + b
+            }, 0)
+          return (val>1000 ? (val).toFixed(2)+' kW' : (val).toFixed(2)+' W');
+      }} }  }}},
       labels:Appliance.names(),
-      tooltip: { y: { formatter: function (val) { return "" + (val/1000).toFixed(2) + "kW"}}}
+      tooltip: { y: { formatter: function (val) { return "" + (val/1000).toFixed(2) + "kW" }}}
       };
       //End of donut
 
@@ -820,13 +932,13 @@ var Charts = {
       var price = System.data.cost;
       // Computations
       var log = [
-        {name:'Total Power Consumption', value:power/1000, unit:'kW'},
+        {name:'Total Power Consumption', value:(power>500 ? (power/1000).toFixed(2): (power).toFixed(2) ), unit:(power>500 ? 'kW': 'W' )},
         {name:'Estimated Cost', value:(price*1).toFixed(2), unit:'Pesos / kW'},
         {name:'Estimated Price', value:(power/1000*price).toFixed(2), unit:'Pesos'},
 
         {name:'', value:'', unit:''},
         {name:'Most Used Appliance', value:appliance[most+1], unit:''},
-        {name:`${appliance[most+1]} Power Consumption`, value:max/1000, unit:'Kw Hour'},
+        {name:`${appliance[most+1]} Power Consumption`, value:(max>500 ? (max/1000).toFixed(2): (max).toFixed(2) ), unit:(max>500 ? 'kW': 'W' )},
       ];
       var temp = '';
     log.map(val=>{
@@ -883,43 +995,100 @@ var Charts = {
 // Settings Functions
 var System = {
   setup: function(){
-    var username = $('#_username').val();
-    var email = $('#_email').val();
-    var serial = $('#_home-serial').val();
-
-
-    localStorage.setItem('credentials', JSON.stringify({username:username, email:email, serial:serial, }));
-    location.reload();
+    Modal.slide('<div id="slide_up_title">Welcome</div>',
+    `
+    <div id="_home_key" style="display:block;">
+      <b>Home key:</b>
+      <input id="_home_serial" value="amFsZSc">
+      <button onclick="System.connect()">Submit</button>
+    </div>
+    <div id="_home_login" style="display:none;">
+      Username:
+        <input id="login_username" value="admin">
+      Password:
+        <input id="login_password" type="password" value="12345678">
+      <button onclick="System.register()">Submit</button>
+    </div>
+    `,
+    `Modal.alert('You must login first');return;`);
+    //localStorage.setItem('credentials', JSON.stringify({username:username, email:email, serial:serial, }));
+    //location.reload();
     //Decode link
     //Set link in socket
   },
-  updateCredentials: function(){
-    var username = $('#username').val();
-    var email = $('#email').val();
-    var notifications = $('#notifications').val();
-    var serial = $('#serial').val();
-    console.log(username+''+serial);
-    Modal.confirm('Are you sure you want to change your credentials? <br><em>Changing to the wrong home serial would neglect existing</em>',
-    `localStorage.setItem('credentials', JSON.stringify({username:'${username}', email:'${email}',serial:'${serial}', notifications:'${notifications}'}));
-    location.reload();`);
+  connect:function(){
+    System.serial = $('#_home_serial').val();
+    Socket.getGlobal();
+    var url = "https://script.google.com/macros/s/AKfycbxRNGjh4HadFn__jIp_tSmp5Tf_hQdhCJlWTwzxiRFx4n9jjI4c/exec?action=read";
+    $.getJSON(url, function (json) {
+      var link = '';
+          for (var i = 0; i < json.records.length; i++) {
+                  if( json.records[i].ID == System.serial){
+                    link = json.records[i].NAME;
+                  }
+              }
+              if(link==''){ Modal.alert('Smart Home Serial not recognized...') }
+              Socket.Sockets.Global = `wss://${link}.jp.ngrok.io/ws`;
 
-
+      })
+      .fail(function(){})
+      $('#_home_key').css({display:'none'});
+      $('#_home_login').css({display:'block'});
+  },
+  register: function(){
+    //Get system serial
+    System.login=false;
+    System.userdata = {
+      username:$('#login_username').val(),
+      password:$('#login_password').val(),
+      device:System.device,
+      serial:$('#_home_serial').val(),
+      stamp:0
+    }
+    localStorage.setItem('userdata',JSON.stringify(System.userdata));
+    System.serial = System.userdata.serial;
+    Socket.init();
   },
 
   init: function(){
+    // Tab Functionalities
+    $('nav li').click(function(){
+      var target = $(this).index();
+        localStorage.setItem('tab', target);
+        $('body > header').each(function(i){ if(i==target){ $(this).attr('active', ''); return; } $(this).removeAttr('active');});
+        $('section').each(function(i){if(i==target){ $(this).attr('active', ''); return; } $(this).removeAttr('active');});
+        $('nav li').each(function(i){if(i==target){ $(this).attr('selected', ''); return; } $(this).removeAttr('selected');});
+        if(target==0){ setTimeout(function(){Charts.render()},50);}
+      });
+      $('nav li').eq(Number(localStorage.getItem('tab'))).trigger('click');
+
+
     // Pull
     var settings = JSON.parse(localStorage.getItem('settings'));
     if (settings==null){ this.save(); settings=JSON.parse(localStorage.getItem('settings')); };
-    var temp = JSON.parse(localStorage.getItem('credentials'));
-    if (temp==null){  System.serial=''; System.email=''; System.notifications=false};
     System.data = settings;
-    System.serial= temp.serial;
-    System.email= temp.email;
-    System.notifications=temp.notofications;
+    try {
+      var temp = JSON.parse(localStorage.getItem('userdata'));
+    } catch (e) {
+      console.log(e);
+    }
 
+    console.log(temp);
+    if (temp==null){
+      System.setup()
+      return;
+    };
+
+    System.login = true;
+    System.serial= temp.serial;
+    System.userdata= temp;
+
+    var temp = JSON.parse(localStorage.getItem('token'));
+    if (temp==null){ /*System destroy*/ };
+    System.token = temp;
     //Restore Settings
     Object.keys(settings).map(val =>{ $(`#${val}`).val(settings[val]);});
-
+    System.exec();
     // Listen
     $('.settings').on('change', function(event){ event.stopPropagation(); event.stopImmediatePropagation(); System.save(); });
     //Setup Home
@@ -935,16 +1104,13 @@ var System = {
     // Initialize
     System.exec();
     System.getPrices();
-    // Tab Functionalities
-    $('nav li').click(function(){
-      var target = $(this).index();
-        localStorage.setItem('tab', target);
-        $('body > header').each(function(i){ if(i==target){ $(this).attr('active', ''); return; } $(this).removeAttr('active');});
-        $('section').each(function(i){if(i==target){ $(this).attr('active', ''); return; } $(this).removeAttr('active');});
-        $('nav li').each(function(i){if(i==target){ $(this).attr('selected', ''); return; } $(this).removeAttr('selected');});
-        if(target==0){ setTimeout(function(){Charts.render()},50);}
-      });
-      $('nav li').eq(Number(localStorage.getItem('tab'))).trigger('click');
+
+    // Init for other main features
+    Appliance.init();
+    Charts.init();
+      // Graphs
+    Socket.init();
+    CCTV.init();
   },data:{},serial:'',
   save: function(){
     this.data = {
@@ -964,7 +1130,6 @@ var System = {
       $('body').get(0).style.setProperty("--accent",`var(--${System.data.theme})`);
     },
     graphMode: function(){
-
       if($('#chart').html().trim()=='') return;
     location.reload();
     }
@@ -986,10 +1151,24 @@ var System = {
   console.log('Reload');
   },
   users: function(){
+    Socket.request({code:'devices', username:System.userdata.username });
+    Modal.slide('Logged devices', '<div id="logged_devices"></div>');
 
+  },
+  view_device: function(token){
+    System.logged_devices.map(device=>{
+      if(device.token==token){
+        Modal.alert(`<h1>Device details</h1>${device.os}<br>${device.browser}<br>${device.token}<br><a onclick="System.logout_device('${device.token}')">Log out from device</a><br>`);
+      }
 
-    Modal.slide('Logged devices', '');
-
+    })
+  },
+  logout_device:function(token){
+    System.logged_devices.map(device=>{
+      if(device.token==token){
+        Socket.request({code:'logout', username:System.userdata.username ,device:token });
+      }
+    });
   },
   getPrices: function(){
     var url = "https://script.google.com/macros/s/AKfycbyucHu8ueH2GEzJWZV-azOiqShX2Um3t2MT00hM/exec?action=read";
@@ -1007,6 +1186,10 @@ var System = {
        }
       )
   },
+  destroy: function(){
+    localStorage.clear()
+    location.reload();
+  }
 
 
 
