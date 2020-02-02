@@ -209,7 +209,7 @@ var Time = {
    },
    // b8caa513.jp.ngrok.io
    Sockets:{
-     Local:'wss://smart-home-beta.local:417/ws',
+     Local:'wss://smart-home.local:417/ws',
      Global:'wss://smart-home.local:417/ws',
    //Global:'wss://3d5b85af.jp.ngrok.io',
    //Global:'wss://839298fc.jp.ngrok.io/ws'
