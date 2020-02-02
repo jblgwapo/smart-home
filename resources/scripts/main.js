@@ -209,7 +209,7 @@ var Time = {
    },
    // b8caa513.jp.ngrok.io
    Sockets:{
-     Local:'wss://smart-home.local:417/ws',
+     Local:'wss://smart-home-beta.local:417/ws',
      Global:'wss://smart-home.local:417/ws',
    //Global:'wss://3d5b85af.jp.ngrok.io',
    //Global:'wss://839298fc.jp.ngrok.io/ws'
@@ -290,7 +290,8 @@ var Time = {
 
        //Modal.alert('Local is Online!');
        console.log(Socket.mode + ' is connected!');
-       $('#_status_').html(Socket.mode + ' connection');
+       $('.system-status').each( function(){$(this).html(Socket.mode); $(this).css({color:'green'});});
+
        Socket.status.isOnline=true;
        //Loop through queue
        setTimeout( () => {
@@ -311,7 +312,7 @@ var Time = {
       }
     Socket.wss.onclose = function(e) {
      //console.log(`${Socket.mode} is offline. Searching for socket.`, e.reason);
-     $('#_status_').html('No Connection.');
+     $('.system-status').each( function(){$(this).html('Offline'); $(this).css({color:'red'});});
        Socket.status.isOnline=false;
        Socket.search();
        //Socket.search();
@@ -363,9 +364,9 @@ var Time = {
           localStorage.setItem('Home', JSON.stringify(Home) );
           console.log('New Data');
           Charts.render();
-
           setTimeout(function(){
-            Appliance.init()
+            Appliance.init();
+            CCTV.updateNames()
           },150)
         break;
       case 'notify':
@@ -520,7 +521,7 @@ var CCTV = {
     $('#camera').html('');
     Home.camera.map( cctv=>{
       var camera =
-      `<article><header><input value="${cctv.name}" style="background:none; border:none;"></header>
+      `<article><header><span onclick="CCTV.options('${cctv.serial}')" id="camera_${cctv.serial}">${cctv.name}</span></header>
           <div style="width:100%;"><img id="${cctv.serial}_cctv" style="height:200px; width:auto;"><br><button onclick="CCTV.live('${cctv.serial}')">Live</button></div>
       </article>`;
       $('#camera').append(camera);
@@ -545,14 +546,34 @@ var CCTV = {
     Socket.request({code:'remove', data:0, serial:serial , item:'cctv'});
     Modal.close(Modal.count-2);
   },
-  rename: function(serial){
-    var newName = $(`${serial}_cctv`).val();
+  options:function(serial){
+    Home.camera.map(val=>{
+      if(val.serial==serial){
+        Modal.alert(`<a onclick="CCTV.remove('${serial}')" style="float:right; color:red;">remove</a><br><input type="text" id="camera-rename" value="${val.name}" onchange="CCTV.rename('${serial}', this.value)">`);
+      }
+    });
+
+  },
+  updateNames:function() {
+      Home.camera.map(val=>{
+        $(`#camera_${val.serial}`).html(val.name);
+      });
+  },
+  renamePrompt:function(serial){
+    Home.camera.map(val=>{
+      if(val.serial==serial){
+        Modal.confirm(`<input type="text" id="camera-rename" value="${val.name}">`,`CCTV.rename('${serial}', $('#camera-rename').val());`)
+      }
+    });
+  },
+  rename: function(serial, newName){
     Home.camera.map((cam)=>{
       if(cam.serial==serial){
-        Socket.request({code:'rename', data:0, name:newName, serial:val.serial, socket:'---', device:'camera' })
+        Socket.request({code:'rename', data:0, name:newName, serial:cam.serial, socket:'---', device:'camera' })
       }
     })
   },
+
   live: function(serial){
     this.data.serial = serial;
     Socket.request({code:'feed', intent:'start', data:'---', serial:serial})
@@ -611,21 +632,25 @@ var Appliance = {
       var serial = appliance.serial;
 
       var temp =
-      `<article><header onclick="Appliance.rename('${serial}',${appliance.socket})">
+      `<article><header>
+      <span onclick="Appliance.options('${serial}',${appliance.socket})" style="cursor:pointer;">
       <div style="height:0.5em; width:0.5em; background:${appliance.online?'green':'red'}; border-radius:0.5em; display:inline-block;"></div>
       ${appliance.name}
+      </span>
       <label class="switch" ${(appliance.type=="Monitor"? 'style="display:none;"':'')}><input type="checkbox" ${(appliance.status==true?'checked':'')} onchange="Appliance.toggle('${serial}',${appliance.socket})"><span class="slider"></span></label></header>
       <ul><li>Serial Key: ${ serial }:${ appliance.socket }</li>
       <li>Type: ${appliance.type}</li>
       <li>Consumption: ${ total } Watts today</li><br>
+      <div ${(appliance.type=="Monitor"? 'style="display:none;"':'')}>
       <li>Automation: ${(appliance.automation_enabled ? 'enabled' : 'disabled')}
 
       </li>
       <li>Turn on every: ${(appliance.automation_enabled ? appliance.automation[1] : 'disabled')}</li>
       <li>Turn off every: ${(appliance.automation_enabled ? appliance.automation[0] : 'disabled')}</li>
-
+      </div>
       </ul><br>
-      <button onclick="Appliance.configure('${(serial)}',${appliance.socket})" style=" font-size:0.7em;">Configure</button>
+      <button onclick="Appliance.configure('${(serial)}',${appliance.socket})" style="font-size:0.7em; ${(appliance.type=="Monitor"? 'display:none;':'')}">Configure</button>
+
       </article>`;
       $('#appliances').append(temp);
     });
@@ -692,7 +717,7 @@ var Appliance = {
     }
     Home.appliance.map( val =>{ if(val.serial==serial && val.socket==socket) appliance=val; })
     if(!appliance) {Modal.alert('None Found '+serial); return;}
-    Modal.alert( `<b style="font-size:1.5em;">${appliance.name}</b> <a style="float:right; color:red; cursor:pointer;" onclick="Appliance.removePrompt('${serial}')">remove</a><br><br>
+    Modal.alert( `<b style="font-size:1.5em;">${appliance.name}</b><a style="float:right; color:red; cursor:pointer;" onclick="Appliance.removePrompt('${serial}')">remove</a><br><br>
       Automation:
       <select id="_automation_enabled" onchange="Appliance.updateConfig('${serial}',${appliance.socket})">
       <option value="1">Enabled</option>
@@ -728,7 +753,6 @@ var Appliance = {
   updateConfig:function(serial, socket){
     console.log('S: '+socket);
     console.log(serial);
-
     Home.appliance.map( val =>{
       console.log((val.serial==serial));
       if(val.serial==serial) {
@@ -740,7 +764,6 @@ var Appliance = {
         console.log(val);
       }
     });
-
   },
   removePrompt: function(serial){
 
@@ -779,11 +802,19 @@ var Appliance = {
     Socket.request({code:'remove', data:0, serial:serial , item:'appliance'});
     Modal.close(Modal.count-2);
   },
-  rename:function(serial, socket){
+  options: function(serial,socket){
+    Home.appliance.map(val=>{
+      if(val.serial==serial && val.socket==socket){
+        Modal.alert(`<a onclick="" style="float:right; color:red;">remove</a><br><input type="text" id="appliance-rename" value="${val.name}" onchange="Appliance.rename('${serial}','${socket}',this.value)">`);}
+    });
+
+  },
+
+  rename:function(serial, socket, newName){
+    console.log('Rename: '+newName );
     Home.appliance.map(val=>{
       if(val.serial==serial && val.socket==socket){
         console.log('Rename: '+ serial +' ' + socket);
-        var newName = $(`#${serial}_${socket}`).val();
         console.log('Rename:'+newName);
         Socket.request({code:'rename', data:0, name:newName, serial:val.serial, socket:val.socket, device:'appliance' })
       }
