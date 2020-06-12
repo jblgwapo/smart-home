@@ -209,7 +209,7 @@ var Time = {
    },
    // b8caa513.jp.ngrok.io
    Sockets:{
-     Local:'wss://smart-home.local:417/ws',
+     Local:'wss://smart-home-beta.local:417/ws',
      Global:'wss://smart-home.local:417/ws',
    //Global:'wss://3d5b85af.jp.ngrok.io',
    //Global:'wss://839298fc.jp.ngrok.io/ws'
@@ -457,7 +457,7 @@ var Home = {
     consumption:{
       /* Format: log year month day : logYYYYMMDD   */
       /* 24 hour format / hourly data for an appliance */
-      log20200111:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123},
+      log20200612:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123},
      }
     },
     {
@@ -469,7 +469,7 @@ var Home = {
     automation_enabled:false,
     automation:['07:00 PM','03:00 AM'],
     consumption:{
-      log20200111:{data:[23,45,56,45,34,50,40,23,20,10,43,43,43,23,3,12], total:123},
+      log20200612:{data:[23,45,56,45,34,50,40,23,20,10,43,43,43,23,3,12], total:123},
      }
    },{
    name:'Fan', /* User Defined */
@@ -480,7 +480,7 @@ var Home = {
    automation_enabled:false,
    automation:['',''], /* Default Automation time */
    consumption:{
-     log20200111:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123},
+     log20200612:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123},
     }
   },{
   name:'Lights', /* User Defined */
@@ -491,7 +491,7 @@ var Home = {
   automation_enabled:false,
   automation:['',''],
   consumption:{
-    log20200111:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123},
+    log20200612:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123},
    }
   }
 ],
@@ -500,7 +500,7 @@ var Home = {
 // Home Power Consumption
 /* same as appliance but uses the total value of all appliance */
 consumption:{
-    log20200111:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123}
+    log20200612:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123}
 },
 
 
@@ -1025,6 +1025,7 @@ var Charts = {
 
 // Settings Functions
 var System = {
+  price:{ company:[], cost:[]},
   setup: function(){
     Modal.slide('<div id="slide_up_title">Welcome</div>',
     `
@@ -1125,6 +1126,13 @@ var System = {
     Object.keys(settings).map(val =>{ $(`#${val}`).val(settings[val]);});
     System.exec();
     // Listen
+
+
+    var temp = JSON.parse(localStorage.getItem('prices'));
+
+
+    $('#cost').val();
+
     $('.settings').on('change', function(event){ event.stopPropagation(); event.stopImmediatePropagation(); System.save(); });
     //Setup Home
     var home = localStorage.getItem('Home');
@@ -1195,7 +1203,6 @@ var System = {
       if(device.token==token){
         Modal.alert(`<h1>Device details</h1>${device.os}<br>${device.browser}<br>${device.token}<br><a onclick="System.logout_device('${device.token}')">Log out from device</a><br>`);
       }
-
     })
   },
   logout_device:function(token){
@@ -1209,18 +1216,36 @@ var System = {
     var url = "https://script.google.com/macros/s/AKfycbyucHu8ueH2GEzJWZV-azOiqShX2Um3t2MT00hM/exec?action=read";
     $.getJSON(url, function (json) {
       var prices = '';
+          System.price.cost = [];
+          System.price.company = [];
+          localStorage.setItem('prices', json.records)
           json.records.map(val=>{
-            prices+=`<option value="${val.NAME}">${val.ID} (${val.NAME} pesos/kW)</option>`
+            System.prices.cost.push(val.NAME);
+            System.prices.company.push(val.ID);
+            prices+=`<option value="${val.ID}" id="elecrical-${val.NAME}" >${val.ID} (${val.NAME} pesos/kW)</option>`
           })
             prices+='<option value="0">Custom</option>';
               $('#priceSelector').html(prices);
-
       })
       .fail(function(){
         System.prices = setTimeout( function(){System.getPrices();}, 15000);
        }
       )
   },
+  setPrice: function(){
+    var price = Number($('#priceSelector').val());
+    if(price==0){
+      $('#cost').css({display:'block'});
+    }
+    else{
+      for (var i = 'custom'; i < System.prices.company.length; i++) {
+        System.data.price = System.prices.cost[i];
+      }
+      $('#cost').val(price);
+      $('#cost').css({display:'none'});
+    }
+  },
+
   destroy: function(){
     localStorage.clear()
     location.reload();

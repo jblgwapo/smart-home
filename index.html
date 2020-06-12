@@ -126,8 +126,8 @@
         <article>
           <header>Timeline
           </header>
-
           <div graph id="chart"></div>
+          <center>
           <div id="third">
           <select id="chartView" class="third">
             <option value="no_data">No data</option>
@@ -139,6 +139,7 @@
             <option value="no_data">No data</option>
           </select>
         </div>
+        <center>
         </article>
 
         <article>
@@ -202,8 +203,8 @@
 
             <li>
               Electrical Cost/Kw (Price):
+              <select id="priceSelector" onchange="System.setPrice()" style="display:none;"></select>
               <input type="number" class="settings" id="cost" value="9.96">
-              <select id="priceSelector"></select>
             </li>
 
           </ul><br>
