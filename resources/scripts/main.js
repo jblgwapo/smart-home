@@ -457,7 +457,7 @@ var Home = {
     consumption:{
       /* Format: log year month day : logYYYYMMDD   */
       /* 24 hour format / hourly data for an appliance */
-      log20200612:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123},
+      log20200613:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123},
      }
     },
     {
@@ -469,7 +469,7 @@ var Home = {
     automation_enabled:false,
     automation:['07:00 PM','03:00 AM'],
     consumption:{
-      log20200612:{data:[23,45,56,45,34,50,40,23,20,10,43,43,43,23,3,12], total:123},
+      log20200613:{data:[23,45,56,45,34,50,40,23,20,10,43,43,43,23,3,12], total:123},
      }
    },{
    name:'Fan', /* User Defined */
@@ -480,7 +480,7 @@ var Home = {
    automation_enabled:false,
    automation:['',''], /* Default Automation time */
    consumption:{
-     log20200612:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123},
+     log20200613:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123},
     }
   },{
   name:'Lights', /* User Defined */
@@ -491,7 +491,7 @@ var Home = {
   automation_enabled:false,
   automation:['',''],
   consumption:{
-    log20200612:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123},
+    log20200613:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123},
 
    }
   }
@@ -501,7 +501,7 @@ var Home = {
 // Home Power Consumption
 /* same as appliance but uses the total value of all appliance */
 consumption:{
-    log20200612:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123}
+    log20200613:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123}
 },
 
 
@@ -515,7 +515,7 @@ camera:[{
 };
 
 
-
+localStorage.setItem('Home', JSON.stringify(Home));
 
 var CCTV = {
   init: function(){
