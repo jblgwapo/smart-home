@@ -492,6 +492,7 @@ var Home = {
   automation:['',''],
   consumption:{
     log20200612:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123},
+
    }
   }
 ],
@@ -1107,7 +1108,7 @@ var System = {
 
     console.log(temp);
     if (temp==null){
-      System.setup()
+      //System.setup()
       return;
     };
 
@@ -1127,8 +1128,13 @@ var System = {
     System.exec();
     // Listen
 
+    try {
+      var temp = JSON.parse(localStorage.getItem('prices'));
+    } catch (e) {
+      System.price.cost = [10];
+      System.price.company = ['Default'];
+    }
 
-    var temp = JSON.parse(localStorage.getItem('prices'));
 
 
     $('#cost').val();
@@ -1146,7 +1152,7 @@ var System = {
 
     // Initialize
     System.exec();
-    System.getPrices();
+    //System.getPrices();
 
     // Init for other main features
     Appliance.init();
