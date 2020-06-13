@@ -457,7 +457,7 @@ var Home = {
     consumption:{
       /* Format: log year month day : logYYYYMMDD   */
       /* 24 hour format / hourly data for an appliance */
-      log20200613:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123},
+      log20200613:{data:[30,20,34,25,28,20,44,34,25,33,23,44,40,50,17,12], total:479},
      }
     },
     {
@@ -469,7 +469,7 @@ var Home = {
     automation_enabled:false,
     automation:['07:00 PM','03:00 AM'],
     consumption:{
-      log20200613:{data:[23,45,56,45,34,50,40,23,20,10,43,43,43,23,3,12], total:123},
+      log20200613:{data:[23,45,56,45,34,50,40,23,20,10,43,43,43,23,3,12], total:533},
      }
    },{
    name:'Fan', /* User Defined */
@@ -480,10 +480,10 @@ var Home = {
    automation_enabled:false,
    automation:['',''], /* Default Automation time */
    consumption:{
-     log20200613:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123},
+     log20200613:{data:[10,10,6,7,8,10,2,15,20,14,22,12,14,13,17,12], total:192},
     }
   },{
-  name:'Lights', /* User Defined */
+  name:'Central Aircon', /* User Defined */
   type:'switch',
   status:true, /* Remote */
   serial:'oledstx',
@@ -491,7 +491,7 @@ var Home = {
   automation_enabled:false,
   automation:['',''],
   consumption:{
-    log20200613:{data:[10.23,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:123},
+    log20200613:{data:[10,50,70,60,80,50,40,30,20,10,23,120,40,130,170,12], total:915},
 
    }
   }
@@ -1109,7 +1109,10 @@ var System = {
     console.log(temp);
     if (temp==null){
       //System.setup()
-      return;
+      //return;
+      temp={
+        serial:'amFsZSc'
+      };
     };
 
     System.login = true;
@@ -1137,7 +1140,7 @@ var System = {
 
 
 
-    $('#cost').val();
+    //$('#cost').val();
 
     $('.settings').on('change', function(event){ event.stopPropagation(); event.stopImmediatePropagation(); System.save(); });
     //Setup Home
